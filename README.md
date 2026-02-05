@@ -1,34 +1,47 @@
-# 💀 GLASSBOX // UFDR-PARSER
+# 🔍 GLASSBOX // FORENSIC TRIAGE
 
-> **the phone is dead. we're just performing the autopsy.**
+> **shattering the opacity of digital evidence.**
 
-### // the problem
+### // the crisis
 
-police seizures generate **UFDR (universal forensic data recovery)** files—massive, chaotic data dumps that are essentially "digital noise." for most investigators, navigating these files is a technical nightmare. it’s slow, it’s messy, and critical evidence gets buried under thousands of lines of junk metadata.
+in modern investigations, the phone is the primary witness. tools like **cellebrite** do a great job of extracting data, but they leave investigators with a "data dump" nightmare. manual review of gigabytes of chat logs and location pings is a slow, soul-crushing process that leads to fatigue and missed evidence.
+
+**extraction is solved. analysis is broken.**
 
 ### // the solution
 
-**glassbox** is a high-speed forensic engine designed to strip away the "mess" and lay the device's soul bare. it transforms unreadable dumps into a structured, searchable, and visual timeline of human activity.
+**glassbox** is an automated triage layer that sits between raw forensic exports and the investigator. it doesn't just "show" data; it filters for intent.
 
-* **clinical extraction:** strips text logs, geodata, and app footprints from the ufdr mess.
-* **zero-friction ui:** designed for investigators, not just tech nerds.
-* **visual mapping:** turns raw coordinates into actual movement patterns.
-* **dark-mode native:** because nobody wants to look at white screens at 3 am in a lab.
-
-### // status
-
-`[initialization stage]`
-currently mapping the protocol for deep-parsing and automated connection-finding.
+* **⚡ lightning triage:** instantly parses exported CSV/Excel datasets from major forensic tools.
+* **🎯 heuristic filtering:** uses keyword matching to flag high-priority conversations while silencing the noise of everyday "junk" data.
+* **⏳ temporal mapping:** visualizes communication spikes and location clusters to find patterns human eyes miss.
+* **📉 footprint reduction:** turns days of manual reading into minutes of targeted review.
 
 ---
 
-### how to use (eventually)
+### // technical architecture
 
-```bash
-git clone https://github.com/your-username/vivisect.git
-cd vivisect
-# coming soon: the end of digital secrets.
+glassbox is built to be lightweight and portable, ensuring investigators can run triage locally without sending sensitive evidence to the cloud.
 
-```
+* **parser:** optimized ingestion for massive tabular forensic data.
+* **engine:** heuristic-based scoring for "interest levels" in chat logs.
+* **viz:** d3-based or similar lightweight temporal mapping.
+
+---
+
+### // status
+
+`[!] initial development phase`
+
+* [x] project conceptualization
+* [ ] core parser implementation
+* [ ] heuristic engine v1
+* [ ] temporal dashboard
+
+---
+
+### // disclaimer
+
+*this tool is intended for use by law enforcement and authorized forensic professionals. use responsibly or whatever lol.*
 
 ---
