@@ -1,4 +1,4 @@
-# 🔍 GLASSBOX // FORENSIC TRIAGE
+# 🥂 GLASSBOX // FORENSIC TRIAGE
 
 > **shattering the opacity of digital evidence.**
 
