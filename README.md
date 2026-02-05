@@ -43,5 +43,3 @@ glassbox is built to be lightweight and portable, ensuring investigators can run
 ### // disclaimer
 
 *this tool is intended for use by law enforcement and authorized forensic professionals. use responsibly or whatever lol.*
-
----
