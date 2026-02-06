@@ -1,0 +1,22 @@
+# User files
+.env
+.env.*
+IMPLEMENTATION_PLAN.md
+push_error.txt
+push_error_main.txt
+
+# Dependencies
+node_modules/
+backend/node_modules/
+Glassbox/node_modules/
+
+# Production
+Glassbox/dist/
+
+# Misc
+.DS_Store
+*.log
+.vscode/
+
+# Ignore the brain directory if it exists here (usually it's in AppData, but just in case)
+.gemini/
