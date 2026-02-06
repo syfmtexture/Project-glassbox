@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
@@ -9,6 +10,34 @@ router.get('/health', (req, res) => {
         message: 'Server is running',
         timestamp: new Date().toISOString()
     });
+});
+
+// Database connection test endpoint
+router.get('/db-test', (req, res) => {
+    try {
+        const dbState = {
+            0: 'disconnected',
+            1: 'connected',
+            2: 'connecting',
+            3: 'disconnecting'
+        };
+
+        const state = mongoose.connection.readyState;
+
+        res.status(200).json({
+            database: {
+                status: dbState[state],
+                name: mongoose.connection.name || 'N/A',
+                host: mongoose.connection.host || 'N/A'
+            },
+            message: state === 1 ? 'Database connected successfully' : 'Database not connected'
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: 'Database test failed',
+            details: error.message
+        });
+    }
 });
 
 // Sample data endpoint

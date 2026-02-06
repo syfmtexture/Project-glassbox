@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import connectDB from './config/db.js';
 import apiRoutes from './routes/api.js';
 import errorHandler from './middleware/errorHandler.js';
 
@@ -36,8 +37,10 @@ app.get('/', (req, res) => {
 // Error handling middleware (should be last)
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+// Connect to Database and Start server
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
 });
