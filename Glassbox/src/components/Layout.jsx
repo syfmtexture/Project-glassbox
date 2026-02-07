@@ -3,7 +3,8 @@ import Navbar from './Navbar';
 
 const Layout = ({ children }) => {
     return (
-        <div className="min-h-screen bg-liquid-gradient text-glass-text font-sans antialiased overflow-x-hidden selection:bg-accent-blue/30 selection:text-accent-blue-dark">
+        <div className="min-h-screen text-gray-800 font-sans antialiased overflow-x-hidden selection:bg-blue-500/30 selection:text-blue-800">
+            {/* Noise texture overlay */}
             <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none z-50 mix-blend-overlay"></div>
 
             <Navbar />

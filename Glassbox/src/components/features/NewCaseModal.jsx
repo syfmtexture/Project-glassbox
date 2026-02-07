@@ -7,6 +7,7 @@ import { api } from '../../services/api';
 
 const NewCaseModal = ({ isOpen, onClose, onCaseCreated }) => {
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         caseName: '',
         caseNumber: '',
@@ -33,19 +34,45 @@ const NewCaseModal = ({ isOpen, onClose, onCaseCreated }) => {
         }
     };
 
+    const resetForm = () => {
+        setFormData({
+            caseName: '',
+            caseNumber: '',
+            investigator: '',
+            description: '',
+            deviceInfo: {
+                deviceType: 'Phone',
+                imei: '',
+                owner: '',
+                osVersion: ''
+            }
+        });
+        setError('');
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setError('');
+
         try {
-            const newCase = await api.cases.create(formData);
-            onCaseCreated(newCase.data);
+            const response = await api.cases.create(formData);
+            // Handle both response.data and direct response
+            const newCase = response.data || response;
+            onCaseCreated(newCase);
+            resetForm();
             onClose();
-        } catch (error) {
-            console.error('Failed to create case:', error);
-            // Ideally show a toast here
+        } catch (err) {
+            console.error('Failed to create case:', err);
+            setError(err.message || 'Failed to create case');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleClose = () => {
+        resetForm();
+        onClose();
     };
 
     return (
@@ -57,53 +84,76 @@ const NewCaseModal = ({ isOpen, onClose, onCaseCreated }) => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={onClose}
+                        onClick={handleClose}
                     />
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
                         <GlassCard
-                            className="w-full max-w-lg pointer-events-auto shadow-glass-lg border-white/80"
+                            className="w-full max-w-lg pointer-events-auto border-white/80"
+                            style={{ boxShadow: '0 12px 48px rgba(31, 38, 135, 0.12)' }}
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-display font-semibold text-glass-text">New Investigation</h2>
-                                <button onClick={onClose} className="p-1 rounded-full hover:bg-white/40 transition-colors">
-                                    <X className="w-5 h-5 text-glass-textSecondary" />
+                                <h2 className="text-xl font-semibold text-gray-800">New Investigation</h2>
+                                <button onClick={handleClose} className="p-1 rounded-full hover:bg-white/40 transition-colors">
+                                    <X className="w-5 h-5 text-gray-600" />
                                 </button>
                             </div>
+
+                            {error && (
+                                <div className="mb-4 p-3 bg-red-100/50 border border-red-200 rounded-lg text-sm text-red-600">
+                                    {error}
+                                </div>
+                            )}
 
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase tracking-wider text-glass-textTertiary mb-1.5 pl-1">Case Details</label>
+                                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 pl-1">Case Details</label>
                                         <div className="grid grid-cols-2 gap-4">
                                             <input
-                                                name="caseName" value={formData.caseName} onChange={handleChange} placeholder="Case Name *" required
+                                                name="caseName"
+                                                value={formData.caseName}
+                                                onChange={handleChange}
+                                                placeholder="Case Name *"
+                                                required
                                                 className="glass-input w-full"
                                             />
                                             <input
-                                                name="caseNumber" value={formData.caseNumber} onChange={handleChange} placeholder="Case Number"
+                                                name="caseNumber"
+                                                value={formData.caseNumber}
+                                                onChange={handleChange}
+                                                placeholder="Case Number"
                                                 className="glass-input w-full"
                                             />
                                         </div>
                                     </div>
 
                                     <input
-                                        name="investigator" value={formData.investigator} onChange={handleChange} placeholder="Investigator Name"
+                                        name="investigator"
+                                        value={formData.investigator}
+                                        onChange={handleChange}
+                                        placeholder="Investigator Name"
                                         className="glass-input w-full"
                                     />
 
                                     <textarea
-                                        name="description" value={formData.description} onChange={handleChange} placeholder="Description / Notes" rows="2"
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        placeholder="Description / Notes"
+                                        rows="2"
                                         className="glass-input w-full resize-none"
                                     />
 
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase tracking-wider text-glass-textTertiary mb-1.5 pl-1 mt-4">Device Metadata</label>
+                                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 pl-1 mt-4">Device Metadata</label>
                                         <div className="grid grid-cols-2 gap-4 mb-2">
                                             <select
-                                                name="device.deviceType" value={formData.deviceInfo.deviceType} onChange={handleChange}
+                                                name="device.deviceType"
+                                                value={formData.deviceInfo.deviceType}
+                                                onChange={handleChange}
                                                 className="glass-input w-full appearance-none"
                                             >
                                                 <option value="Phone">Smartphone</option>
@@ -112,23 +162,32 @@ const NewCaseModal = ({ isOpen, onClose, onCaseCreated }) => {
                                                 <option value="Other">Other</option>
                                             </select>
                                             <input
-                                                name="device.osVersion" value={formData.deviceInfo.osVersion} onChange={handleChange} placeholder="OS Version"
+                                                name="device.osVersion"
+                                                value={formData.deviceInfo.osVersion}
+                                                onChange={handleChange}
+                                                placeholder="OS Version"
                                                 className="glass-input w-full"
                                             />
                                         </div>
                                         <input
-                                            name="device.owner" value={formData.deviceInfo.owner} onChange={handleChange} placeholder="Device Owner"
+                                            name="device.owner"
+                                            value={formData.deviceInfo.owner}
+                                            onChange={handleChange}
+                                            placeholder="Device Owner"
                                             className="glass-input w-full mb-2"
                                         />
                                         <input
-                                            name="device.imei" value={formData.deviceInfo.imei} onChange={handleChange} placeholder="IMEI / Serial Number"
+                                            name="device.imei"
+                                            value={formData.deviceInfo.imei}
+                                            onChange={handleChange}
+                                            placeholder="IMEI / Serial Number"
                                             className="glass-input w-full"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-white/40">
-                                    <GlassButton type="button" variant="ghost" onClick={onClose}>Cancel</GlassButton>
+                                    <GlassButton type="button" variant="ghost" onClick={handleClose}>Cancel</GlassButton>
                                     <GlassButton type="submit" variant="accent" disabled={loading} className="min-w-[120px] flex items-center justify-center">
                                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Case'}
                                     </GlassButton>

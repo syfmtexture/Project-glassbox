@@ -1,20 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const GlassButton = ({ children, className = '', variant = 'primary', onClick, ...props }) => {
+const GlassButton = ({ children, className = '', variant = 'primary', onClick, disabled = false, type = 'button', ...props }) => {
     const variants = {
-        primary: 'bg-white/50 border-white/70 text-glass-text',
-        accent: 'bg-accent-blue/10 border-accent-blue/30 text-accent-blue font-semibold hover:bg-accent-blue/20',
-        danger: 'bg-priority-critical/10 border-priority-critical/30 text-priority-critical hover:bg-priority-critical/20',
+        primary: 'bg-white/50 border-white/70 text-gray-800',
+        accent: 'bg-blue-500/10 border-blue-500/30 text-blue-600 font-semibold hover:bg-blue-500/20',
+        danger: 'bg-red-500/10 border-red-500/30 text-red-600 hover:bg-red-500/20',
         ghost: 'bg-transparent border-transparent hover:bg-white/30',
     };
 
     return (
         <motion.button
-            className={`glass-button ${variants[variant]} ${className}`}
+            type={type}
+            className={`glass-button ${variants[variant] || variants.primary} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
             onClick={onClick}
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.96 }}
+            disabled={disabled}
+            whileHover={disabled ? {} : { scale: 1.02, y: -2 }}
+            whileTap={disabled ? {} : { scale: 0.96 }}
             {...props}
         >
             {children}
