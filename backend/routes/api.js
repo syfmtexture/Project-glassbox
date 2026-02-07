@@ -1,5 +1,8 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import casesRouter from './cases.js';
+import evidenceRouter from './evidence.js';
+import uploadRouter from './upload.js';
 
 const router = express.Router();
 
@@ -7,8 +10,9 @@ const router = express.Router();
 router.get('/health', (req, res) => {
     res.status(200).json({
         status: 'ok',
-        message: 'Server is running',
-        timestamp: new Date().toISOString()
+        message: 'Glassbox Forensic Triage API is running',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0'
     });
 });
 
@@ -40,32 +44,13 @@ router.get('/db-test', (req, res) => {
     }
 });
 
-// Sample data endpoint
-router.get('/data', (req, res) => {
-    res.status(200).json({
-        message: 'Sample data from backend',
-        data: [
-            { id: 1, name: 'Item 1', value: 100 },
-            { id: 2, name: 'Item 2', value: 200 },
-            { id: 3, name: 'Item 3', value: 300 }
-        ]
-    });
-});
+// ===== Case Management Routes =====
+router.use('/cases', casesRouter);
 
-// POST example - Echo endpoint
-router.post('/echo', (req, res) => {
-    const { message } = req.body;
+// ===== Evidence Routes (nested under cases) =====
+router.use('/cases/:caseId/evidence', evidenceRouter);
 
-    if (!message) {
-        return res.status(400).json({
-            error: 'Message is required'
-        });
-    }
-
-    res.status(200).json({
-        echo: message,
-        receivedAt: new Date().toISOString()
-    });
-});
+// ===== File Upload Routes (nested under cases) =====
+router.use('/cases/:caseId/upload', uploadRouter);
 
 export default router;

@@ -25,11 +25,31 @@ app.use('/api', apiRoutes);
 // Root endpoint
 app.get('/', (req, res) => {
     res.json({
-        message: 'Welcome to Glassbox Backend API',
+        message: 'Welcome to Glassbox Forensic Triage API',
         version: '1.0.0',
         endpoints: {
             health: '/api/health',
-            data: '/api/data'
+            database: '/api/db-test',
+            cases: {
+                list: 'GET /api/cases',
+                create: 'POST /api/cases',
+                detail: 'GET /api/cases/:id',
+                update: 'PUT /api/cases/:id',
+                delete: 'DELETE /api/cases/:id',
+                analyze: 'POST /api/cases/:id/analyze',
+                stats: 'GET /api/cases/:id/stats',
+                timeline: 'GET /api/cases/:id/timeline'
+            },
+            evidence: {
+                list: 'GET /api/cases/:caseId/evidence',
+                highPriority: 'GET /api/cases/:caseId/evidence/high-priority',
+                detail: 'GET /api/cases/:caseId/evidence/:id',
+                update: 'PUT /api/cases/:caseId/evidence/:id'
+            },
+            upload: {
+                upload: 'POST /api/cases/:caseId/upload',
+                status: 'GET /api/cases/:caseId/upload/:jobId/status'
+            }
         }
     });
 });
