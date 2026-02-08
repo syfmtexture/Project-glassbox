@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Calendar } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import GlassCard from '../components/ui/GlassCard'
 import Button from '../components/ui/Button'
 import { casesApi } from '../services/api'
@@ -10,6 +10,7 @@ import { useToast } from '../components/ui/Toast'
 function Timeline() {
     const { id } = useParams()
     const toast = useToast()
+    const hasFetched = useRef(false)
 
     const [loading, setLoading] = useState(true)
     const [caseData, setCaseData] = useState(null)
@@ -19,37 +20,42 @@ function Timeline() {
         endDate: '',
     })
 
-    const loadData = useCallback(async () => {
-        setLoading(true)
-        try {
-            const [caseResult, timelineResult] = await Promise.all([
-                casesApi.get(id),
-                casesApi.getTimeline(id),
-            ])
-
-            setCaseData(caseResult.data)
-
-            // Process timeline data for chart
-            const rawData = timelineResult.data || []
-
-            // Group by hour/day depending on data volume
-            const processed = processTimelineData(rawData)
-            setTimelineData(processed)
-        } catch (error) {
-            toast.error('Failed to load timeline data')
-        } finally {
-            setLoading(false)
-        }
-    }, [id, toast])
-
     useEffect(() => {
+        if (hasFetched.current) return
+        hasFetched.current = true
+
+        const loadData = async () => {
+            setLoading(true)
+            try {
+                const [caseResult, timelineResult] = await Promise.all([
+                    casesApi.get(id),
+                    casesApi.getTimeline(id),
+                ])
+
+                setCaseData(caseResult.data)
+
+                // Process timeline data for chart
+                const rawData = timelineResult.data || {}
+                const processed = processTimelineData(rawData)
+                setTimelineData(processed)
+            } catch (error) {
+                console.error('Timeline error:', error)
+                toast.error('Failed to load timeline data')
+            } finally {
+                setLoading(false)
+            }
+        }
+
         loadData()
-    }, [loadData])
+    }, [id, toast])
 
     // Process raw timeline data into chart-friendly format
     const processTimelineData = (data) => {
-        if (!data || data.length === 0) {
-            // Generate sample data for demo
+        // Backend returns { daily, hourly, weekday }
+        const hourlyData = data?.hourly || []
+
+        if (!hourlyData || hourlyData.length === 0) {
+            // Generate sample data for demo when no data
             const hours = []
             for (let i = 0; i < 24; i++) {
                 hours.push({
@@ -65,13 +71,14 @@ function Timeline() {
             return hours
         }
 
-        // If we have actual data, process it
-        return data.map(item => ({
-            label: item._id?.hour !== undefined ? `${item._id.hour}:00` : item._id,
-            messages: item.messages || 0,
-            calls: item.calls || 0,
-            locations: item.locations || 0,
-            total: (item.messages || 0) + (item.calls || 0) + (item.locations || 0),
+        // Process the actual hourly data from backend
+        return hourlyData.map(item => ({
+            label: `${item.hour}:00`,
+            hour: item.hour,
+            messages: item.count || 0,  // Backend just has count, not broken by type
+            calls: 0,
+            locations: 0,
+            total: item.count || 0,
         }))
     }
 

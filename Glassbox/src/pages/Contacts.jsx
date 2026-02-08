@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Users, MessageSquare, Phone } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -9,38 +9,45 @@ import { useToast } from '../components/ui/Toast'
 function Contacts() {
     const { id } = useParams()
     const toast = useToast()
+    const hasFetched = useRef(false)
 
     const [loading, setLoading] = useState(true)
     const [caseData, setCaseData] = useState(null)
     const [contacts, setContacts] = useState([])
 
-    const loadData = useCallback(async () => {
-        setLoading(true)
-        try {
-            const [caseResult, contactsResult] = await Promise.all([
-                casesApi.get(id),
-                casesApi.getContacts(id, { limit: 50 }),
-            ])
+    useEffect(() => {
+        if (hasFetched.current) return
+        hasFetched.current = true
 
-            setCaseData(caseResult.data)
-            setContacts(contactsResult.data || [])
-        } catch (error) {
-            toast.error('Failed to load contacts')
-        } finally {
-            setLoading(false)
+        const loadData = async () => {
+            setLoading(true)
+            try {
+                const [caseResult, contactsResult] = await Promise.all([
+                    casesApi.get(id),
+                    casesApi.getContacts(id, { limit: 50 }),
+                ])
+
+                setCaseData(caseResult.data)
+                // Backend returns { keyContacts, totalPairs }
+                const contactsData = contactsResult.data?.keyContacts || contactsResult.data || []
+                setContacts(contactsData)
+            } catch (error) {
+                console.error('Contacts error:', error)
+                toast.error('Failed to load contacts')
+            } finally {
+                setLoading(false)
+            }
         }
+
+        loadData()
     }, [id, toast])
 
-    useEffect(() => {
-        loadData()
-    }, [loadData])
-
-    // Find max for bar scaling
-    const maxMessages = Math.max(...contacts.map(c => c.messageCount || c.count || 0), 1)
+    // Find max for bar scaling - use totalMessages from backend
+    const maxMessages = Math.max(...contacts.map(c => c.totalMessages || c.messageCount || c.count || 0), 1)
 
     // Stat cards
     const totalContacts = contacts.length
-    const totalMessages = contacts.reduce((sum, c) => sum + (c.messageCount || c.count || 0), 0)
+    const totalMessages = contacts.reduce((sum, c) => sum + (c.totalMessages || c.messageCount || c.count || 0), 0)
 
     if (loading) {
         return (
@@ -114,12 +121,13 @@ function Contacts() {
                 ) : (
                     <div className="space-y-3">
                         {contacts.map((contact, index) => {
-                            const messageCount = contact.messageCount || contact.count || 0
+                            const messageCount = contact.totalMessages || contact.messageCount || contact.count || 0
                             const barWidth = (messageCount / maxMessages) * 100
+                            const displayName = contact.name || contact.contactName || contact.contact || 'Unknown'
 
                             return (
                                 <motion.div
-                                    key={contact._id || contact.contact || index}
+                                    key={contact.name || contact._id || index}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: index * 0.05 }}
@@ -128,15 +136,15 @@ function Contacts() {
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-[var(--color-accent-primary)]/10 flex items-center justify-center text-[var(--color-accent-primary)] font-medium">
-                                                {(contact.contactName || contact.contact || 'U')[0].toUpperCase()}
+                                                {displayName[0].toUpperCase()}
                                             </div>
                                             <div>
                                                 <div className="font-medium text-[var(--color-text-primary)]">
-                                                    {contact.contactName || contact.contact || 'Unknown'}
+                                                    {displayName}
                                                 </div>
-                                                {contact.phoneNumber && (
+                                                {contact.uniqueContacts > 0 && (
                                                     <div className="text-xs text-[var(--color-text-secondary)]">
-                                                        {contact.phoneNumber}
+                                                        {contact.uniqueContacts} contacts
                                                     </div>
                                                 )}
                                             </div>
