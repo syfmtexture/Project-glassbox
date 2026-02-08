@@ -1,0 +1,473 @@
+import { useState, useEffect, useCallback } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import {
+    ArrowLeft, Upload, Zap, Clock, BarChart2, Users,
+    Edit, Trash2, MoreVertical, FileText, AlertTriangle,
+    MessageSquare, Phone, MapPin, User
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import GlassCard from '../components/ui/GlassCard'
+import Button from '../components/ui/Button'
+import Tabs from '../components/ui/Tabs'
+import Modal from '../components/ui/Modal'
+import FileUpload from '../components/ui/FileUpload'
+import { StatusBadge } from '../components/ui/Badges'
+import CaseForm from '../components/cases/CaseForm'
+import EvidenceCard from '../components/evidence/EvidenceCard'
+import EvidenceDetail from '../components/evidence/EvidenceDetail'
+import EvidenceFilters from '../components/evidence/EvidenceFilters'
+import { casesApi, evidenceApi, uploadApi } from '../services/api'
+import { useToast } from '../components/ui/Toast'
+
+function CaseDetail() {
+    const { id } = useParams()
+    const navigate = useNavigate()
+    const toast = useToast()
+
+    // Case data
+    const [caseData, setCaseData] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const [summary, setSummary] = useState([])
+
+    // Evidence data
+    const [evidence, setEvidence] = useState([])
+    const [evidenceLoading, setEvidenceLoading] = useState(false)
+    const [pagination, setPagination] = useState({ page: 1, total: 0, pages: 1 })
+    const [filters, setFilters] = useState({})
+    const [sources, setSources] = useState([])
+    const [tags, setTags] = useState([])
+
+    // UI state
+    const [activeTab, setActiveTab] = useState('all')
+    const [selectedEvidence, setSelectedEvidence] = useState(null)
+    const [showUpload, setShowUpload] = useState(false)
+    const [showEdit, setShowEdit] = useState(false)
+    const [analyzing, setAnalyzing] = useState(false)
+    const [updating, setUpdating] = useState(false)
+
+    // Load case data
+    const loadCase = useCallback(async () => {
+        try {
+            const [caseResult, summaryResult, sourcesResult, tagsResult] = await Promise.all([
+                casesApi.get(id),
+                evidenceApi.getSummary(id),
+                evidenceApi.getSources(id),
+                evidenceApi.getTags(id),
+            ])
+
+            setCaseData(caseResult.data)
+            setSummary(summaryResult.data || [])
+            setSources(sourcesResult.data || [])
+            setTags(tagsResult.data || [])
+        } catch (error) {
+            toast.error('Failed to load case')
+            navigate('/')
+        } finally {
+            setLoading(false)
+        }
+    }, [id, navigate, toast])
+
+    // Load evidence
+    const loadEvidence = useCallback(async () => {
+        setEvidenceLoading(true)
+        try {
+            let result
+
+            if (activeTab === 'high-priority') {
+                result = await evidenceApi.getHighPriority(id, { ...filters, page: pagination.page })
+            } else if (activeTab === 'bookmarked') {
+                result = await evidenceApi.getBookmarked(id)
+                // Wrap in standard format
+                result = { data: result.data, pagination: { page: 1, total: result.total, pages: 1 } }
+            } else {
+                const tabFilters = activeTab === 'unreviewed' ? { ...filters, reviewed: 'false' } : filters
+                result = await evidenceApi.list(id, { ...tabFilters, page: pagination.page })
+            }
+
+            setEvidence(result.data || [])
+            if (result.pagination) {
+                setPagination(result.pagination)
+            }
+        } catch (error) {
+            toast.error('Failed to load evidence')
+        } finally {
+            setEvidenceLoading(false)
+        }
+    }, [id, activeTab, filters, pagination.page, toast])
+
+    useEffect(() => {
+        loadCase()
+    }, [loadCase])
+
+    useEffect(() => {
+        if (caseData) {
+            loadEvidence()
+        }
+    }, [caseData, loadEvidence])
+
+    // Handlers
+    const handleUpload = async (file) => {
+        try {
+            const result = await uploadApi.upload(id, file)
+            toast.success('File uploaded! Processing...')
+
+            // Poll for status
+            const pollStatus = async () => {
+                const status = await uploadApi.getStatus(id, result.data.jobId)
+                if (status.data.status === 'completed') {
+                    toast.success(`Imported ${status.data.savedRecords} evidence items`)
+                    loadCase()
+                    loadEvidence()
+                } else if (status.data.status === 'failed') {
+                    toast.error('Upload processing failed')
+                } else {
+                    setTimeout(pollStatus, 2000)
+                }
+            }
+            setTimeout(pollStatus, 2000)
+
+            setShowUpload(false)
+        } catch (error) {
+            toast.error('Upload failed')
+        }
+    }
+
+    const handleAnalyze = async () => {
+        setAnalyzing(true)
+        try {
+            await casesApi.analyze(id)
+            toast.success('Analysis started!')
+
+            // Poll for completion
+            const pollStatus = async () => {
+                const status = await casesApi.getAnalysisStatus(id)
+                const latestJob = status.data?.[0]
+                if (latestJob?.status === 'completed') {
+                    toast.success('Analysis complete!')
+                    loadEvidence()
+                    setAnalyzing(false)
+                } else if (latestJob?.status === 'failed') {
+                    toast.error('Analysis failed')
+                    setAnalyzing(false)
+                } else {
+                    setTimeout(pollStatus, 3000)
+                }
+            }
+            setTimeout(pollStatus, 3000)
+        } catch (error) {
+            toast.error(error.message || 'Failed to start analysis')
+            setAnalyzing(false)
+        }
+    }
+
+    const handleUpdateCase = async (data) => {
+        setUpdating(true)
+        try {
+            await casesApi.update(id, data)
+            toast.success('Case updated')
+            setShowEdit(false)
+            loadCase()
+        } catch (error) {
+            toast.error('Failed to update case')
+        } finally {
+            setUpdating(false)
+        }
+    }
+
+    const handleDeleteCase = async () => {
+        if (!confirm('Are you sure you want to delete this case and all its evidence?')) return
+
+        try {
+            await casesApi.delete(id)
+            toast.success('Case deleted')
+            navigate('/')
+        } catch (error) {
+            toast.error('Failed to delete case')
+        }
+    }
+
+    const handleBookmark = async (evidenceId) => {
+        try {
+            await evidenceApi.toggleBookmark(id, evidenceId)
+            setEvidence(prev => prev.map(e =>
+                e._id === evidenceId ? { ...e, isBookmarked: !e.isBookmarked } : e
+            ))
+        } catch (error) {
+            toast.error('Failed to update bookmark')
+        }
+    }
+
+    const tabs = [
+        { id: 'all', label: 'All', count: caseData?.evidenceCount },
+        { id: 'high-priority', label: 'High Priority', count: caseData?.highPriorityCount },
+        { id: 'bookmarked', label: 'Bookmarked' },
+        { id: 'unreviewed', label: 'Unreviewed' },
+    ]
+
+    // Evidence type icons
+    const typeIcons = {
+        message: <MessageSquare size={14} />,
+        call: <Phone size={14} />,
+        location: <MapPin size={14} />,
+        contact: <User size={14} />,
+    }
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <span className="spinner" style={{ width: 32, height: 32 }} />
+            </div>
+        )
+    }
+
+    if (!caseData) return null
+
+    return (
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                    <Link to="/" className="btn-ghost btn-icon p-2">
+                        <ArrowLeft size={20} />
+                    </Link>
+                    <div>
+                        <div className="flex items-center gap-3 mb-1">
+                            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                                {caseData.caseName}
+                            </h1>
+                            <StatusBadge status={caseData.status} />
+                        </div>
+                        {caseData.caseNumber && (
+                            <p className="text-[var(--color-text-secondary)]">
+                                Case #{caseData.caseNumber}
+                                {caseData.investigator && ` • ${caseData.investigator}`}
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" icon={<Edit size={16} />} onClick={() => setShowEdit(true)}>
+                        Edit
+                    </Button>
+                    <Button variant="ghost" icon={<Trash2 size={16} />} onClick={handleDeleteCase}>
+                        Delete
+                    </Button>
+                </div>
+            </div>
+
+            {/* Case Info & Summary Row */}
+            <div className="grid grid-cols-3 gap-4">
+                {/* Case Info */}
+                <GlassCard hover={false}>
+                    <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
+                        Device Information
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                        {caseData.deviceInfo?.deviceType && (
+                            <div className="flex justify-between">
+                                <span className="text-[var(--color-text-secondary)]">Device</span>
+                                <span className="text-[var(--color-text-primary)]">{caseData.deviceInfo.deviceType}</span>
+                            </div>
+                        )}
+                        {caseData.deviceInfo?.owner && (
+                            <div className="flex justify-between">
+                                <span className="text-[var(--color-text-secondary)]">Owner</span>
+                                <span className="text-[var(--color-text-primary)]">{caseData.deviceInfo.owner}</span>
+                            </div>
+                        )}
+                        {caseData.deviceInfo?.imei && (
+                            <div className="flex justify-between">
+                                <span className="text-[var(--color-text-secondary)]">IMEI</span>
+                                <span className="text-[var(--color-text-primary)] font-mono text-xs">{caseData.deviceInfo.imei}</span>
+                            </div>
+                        )}
+                        {caseData.uploadedFiles?.length > 0 && (
+                            <div className="flex justify-between">
+                                <span className="text-[var(--color-text-secondary)]">Files</span>
+                                <span className="text-[var(--color-text-primary)]">{caseData.uploadedFiles.length} uploaded</span>
+                            </div>
+                        )}
+                    </div>
+                </GlassCard>
+
+                {/* Evidence Summary */}
+                <GlassCard hover={false} className="col-span-2">
+                    <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
+                        Evidence Breakdown
+                    </h3>
+                    <div className="grid grid-cols-5 gap-3">
+                        {['message', 'call', 'location', 'contact', 'other'].map(type => {
+                            const typeData = summary.find(s => s.type === type) || { count: 0, highPriority: 0 }
+                            return (
+                                <div key={type} className="text-center">
+                                    <div className="text-xl font-semibold text-[var(--color-text-primary)]">
+                                        {typeData.count}
+                                    </div>
+                                    <div className="text-xs text-[var(--color-text-secondary)] capitalize">
+                                        {type}s
+                                    </div>
+                                    {typeData.highPriority > 0 && (
+                                        <div className="text-xs text-[var(--color-accent-warning)]">
+                                            {typeData.highPriority} high
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                </GlassCard>
+            </div>
+
+            {/* Actions Row */}
+            <div className="flex items-center gap-3">
+                <Button icon={<Upload size={16} />} onClick={() => setShowUpload(true)}>
+                    Upload File
+                </Button>
+                <Button
+                    variant="secondary"
+                    icon={<Zap size={16} />}
+                    onClick={handleAnalyze}
+                    loading={analyzing}
+                    disabled={analyzing}
+                >
+                    {analyzing ? 'Analyzing...' : 'Run Analysis'}
+                </Button>
+                <Link to={`/case/${id}/timeline`}>
+                    <Button variant="ghost" icon={<BarChart2 size={16} />}>
+                        Timeline
+                    </Button>
+                </Link>
+                <Link to={`/case/${id}/contacts`}>
+                    <Button variant="ghost" icon={<Users size={16} />}>
+                        Contacts
+                    </Button>
+                </Link>
+            </div>
+
+            {/* Evidence Section */}
+            <GlassCard hover={false} padding="lg">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                        Evidence Feed
+                    </h2>
+                    <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+                </div>
+
+                {/* Filters */}
+                <div className="mb-4">
+                    <EvidenceFilters
+                        filters={filters}
+                        onFilterChange={setFilters}
+                        sources={sources}
+                        tags={tags}
+                    />
+                </div>
+
+                {/* Evidence List */}
+                {evidenceLoading ? (
+                    <div className="space-y-3">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="skeleton h-24 rounded-xl" />
+                        ))}
+                    </div>
+                ) : evidence.length === 0 ? (
+                    <div className="text-center py-12">
+                        <FileText size={48} className="mx-auto mb-4 text-[var(--color-text-tertiary)]" />
+                        <p className="text-[var(--color-text-secondary)]">
+                            No evidence found. Upload a forensic export to get started.
+                        </p>
+                    </div>
+                ) : (
+                    <motion.div layout className="space-y-3">
+                        <AnimatePresence>
+                            {evidence.map((item) => (
+                                <motion.div
+                                    key={item._id}
+                                    layout
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                >
+                                    <EvidenceCard
+                                        evidence={item}
+                                        onClick={setSelectedEvidence}
+                                        onBookmark={handleBookmark}
+                                    />
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </motion.div>
+                )}
+
+                {/* Pagination */}
+                {pagination.pages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-6">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={pagination.page === 1}
+                            onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
+                        >
+                            Previous
+                        </Button>
+                        <span className="text-sm text-[var(--color-text-secondary)]">
+                            Page {pagination.page} of {pagination.pages}
+                        </span>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={pagination.page === pagination.pages}
+                            onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                )}
+            </GlassCard>
+
+            {/* Evidence Detail Panel */}
+            <AnimatePresence>
+                {selectedEvidence && (
+                    <EvidenceDetail
+                        caseId={id}
+                        evidenceId={selectedEvidence}
+                        onClose={() => setSelectedEvidence(null)}
+                        onUpdate={loadEvidence}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Upload Modal */}
+            <Modal
+                isOpen={showUpload}
+                onClose={() => setShowUpload(false)}
+                title="Upload Forensic Export"
+            >
+                <div className="p-6">
+                    <FileUpload onUpload={handleUpload} />
+                    <p className="text-sm text-[var(--color-text-secondary)] mt-4">
+                        Supports CSV and Excel files exported from forensic tools like Cellebrite, Oxygen, etc.
+                    </p>
+                </div>
+            </Modal>
+
+            {/* Edit Case Modal */}
+            <Modal
+                isOpen={showEdit}
+                onClose={() => setShowEdit(false)}
+                title="Edit Case"
+                size="lg"
+            >
+                <CaseForm
+                    initialData={caseData}
+                    onSubmit={handleUpdateCase}
+                    onCancel={() => setShowEdit(false)}
+                    loading={updating}
+                />
+            </Modal>
+        </div>
+    )
+}
+
+export default CaseDetail

@@ -24,11 +24,36 @@ const COLUMN_MAPPINGS = {
 
 /**
  * Auto-detect column mappings from header row
+ * Falls back to positional mapping if headers are generic (v1, v2, etc.)
  */
 function detectColumnMappings(headers) {
     const mappings = {};
-    const lowerHeaders = headers.map(h => h.toLowerCase().trim());
+    const lowerHeaders = headers.map(h => String(h || '').toLowerCase().trim());
 
+    // Check if headers look generic (v1, v2, column1, etc.)
+    const genericPatterns = [/^v\d+$/, /^column\d+$/, /^col\d+$/, /^field\d+$/, /^f\d+$/, /^\d+$/];
+    const isGenericHeaders = lowerHeaders.every(h =>
+        h === '' || genericPatterns.some(p => p.test(h))
+    );
+
+    if (isGenericHeaders && headers.length >= 6) {
+        // Use positional mapping for standard forensic export format:
+        // timestamp, type, source/app, sender, receiver, content, [score], [category]
+        console.log('Using positional column mapping (generic headers detected)');
+        return {
+            timestamp: headers[0],
+            type: headers[1],
+            source: headers[2],
+            sender: headers[3],
+            receiver: headers[4],
+            content: headers[5],
+            // Optional additional columns
+            ...(headers[6] ? { score: headers[6] } : {}),
+            ...(headers[7] ? { category: headers[7] } : {})
+        };
+    }
+
+    // Try pattern-based detection
     for (const [field, patterns] of Object.entries(COLUMN_MAPPINGS)) {
         for (const pattern of patterns) {
             const index = lowerHeaders.findIndex(h =>
@@ -40,6 +65,9 @@ function detectColumnMappings(headers) {
             }
         }
     }
+
+    // Log what was detected
+    console.log('Detected column mappings:', mappings);
 
     return mappings;
 }
@@ -106,7 +134,27 @@ function parseDate(dateStr) {
  * Transform row data to Evidence schema
  */
 function transformToEvidence(row, mappings, caseId) {
-    const type = detectEvidenceType(row, mappings);
+    // Use type from CSV if available, otherwise detect
+    let type = 'other';
+    if (mappings.type && row[mappings.type]) {
+        const csvType = String(row[mappings.type]).toLowerCase().trim();
+        // Map common CSV type values to Evidence type enum
+        if (csvType.includes('sms') || csvType.includes('message') || csvType.includes('msg') || csvType.includes('text')) {
+            type = 'message';
+        } else if (csvType.includes('call') || csvType.includes('voice')) {
+            type = 'call';
+        } else if (csvType.includes('location') || csvType.includes('gps')) {
+            type = 'location';
+        } else if (csvType.includes('contact')) {
+            type = 'contact';
+        } else if (csvType.includes('media') || csvType.includes('photo') || csvType.includes('video')) {
+            type = 'media';
+        } else {
+            type = detectEvidenceType(row, mappings);
+        }
+    } else {
+        type = detectEvidenceType(row, mappings);
+    }
 
     const evidence = {
         caseId,
@@ -138,6 +186,23 @@ function transformToEvidence(row, mappings, caseId) {
             evidence.emails = [row[mappings.emails]];
         }
         evidence.organization = row[mappings.organization];
+    }
+
+    // Pre-populate analysis if score/category columns exist in CSV
+    // This gives the AI a head start and ensures flagged items are prioritized
+    if (mappings.score && row[mappings.score]) {
+        const score = parseInt(row[mappings.score]) || 0;
+        const category = mappings.category ? String(row[mappings.category] || '').toLowerCase() : '';
+
+        evidence.analysis = {
+            priorityScore: score,
+            priority: score >= 80 ? 'critical' : score >= 60 ? 'high' : score >= 40 ? 'medium' : 'low',
+            flags: category ? [category] : [],
+            summary: `Imported with score ${score}` + (category ? ` (${category})` : ''),
+            sentiment: 'neutral',
+            entities: [],
+            analyzedAt: new Date()
+        };
     }
 
     return evidence;
@@ -239,6 +304,125 @@ export async function parseFile(filePath, caseId, onProgress) {
 }
 
 /**
+ * Parse CSV from buffer (for GridFS/memory uploads)
+ */
+export async function parseCSVFromBuffer(buffer, caseId, onProgress) {
+    const csvContent = buffer.toString('utf-8');
+    const lines = csvContent.split(/\r?\n/);
+
+    if (lines.length === 0) {
+        return { records: [], totalRows: 0, mappings: {} };
+    }
+
+    // Parse header row
+    const headers = parseCSVLine(lines[0]);
+    const mappings = detectColumnMappings(headers);
+    console.log('Detected column mappings:', mappings);
+
+    const results = [];
+    let rowCount = 0;
+
+    // Parse data rows
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const values = parseCSVLine(line);
+        const row = {};
+        headers.forEach((header, index) => {
+            row[header] = values[index] || '';
+        });
+
+        rowCount++;
+        const evidence = transformToEvidence(row, mappings, caseId);
+        results.push(evidence);
+
+        if (onProgress && rowCount % 100 === 0) {
+            onProgress(rowCount);
+        }
+    }
+
+    return {
+        records: results,
+        totalRows: rowCount,
+        mappings
+    };
+}
+
+/**
+ * Simple CSV line parser (handles quoted values)
+ */
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+
+        if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+
+    result.push(current.trim());
+    return result;
+}
+
+/**
+ * Parse Excel from buffer (for GridFS/memory uploads)
+ */
+export async function parseExcelFromBuffer(buffer, caseId, onProgress) {
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const results = [];
+    let totalRows = 0;
+
+    // Process each sheet
+    for (const sheetName of workbook.SheetNames) {
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        if (data.length < 2) continue;  // Skip empty sheets
+
+        const headers = data[0].map(h => String(h || ''));
+        const mappings = detectColumnMappings(headers);
+
+        console.log(`Processing sheet "${sheetName}" with ${data.length - 1} rows`);
+
+        for (let i = 1; i < data.length; i++) {
+            const row = {};
+            headers.forEach((header, index) => {
+                row[header] = data[i][index];
+            });
+
+            const evidence = transformToEvidence(row, mappings, caseId);
+            results.push(evidence);
+            totalRows++;
+
+            if (onProgress && totalRows % 100 === 0) {
+                onProgress(totalRows);
+            }
+        }
+    }
+
+    return {
+        records: results,
+        totalRows,
+        sheets: workbook.SheetNames
+    };
+}
+
+/**
  * Save parsed records to database in batches
  */
 export async function saveEvidenceToDatabase(records, batchSize = 100) {
@@ -263,6 +447,8 @@ export default {
     parseFile,
     parseCSV,
     parseExcel,
+    parseCSVFromBuffer,
+    parseExcelFromBuffer,
     saveEvidenceToDatabase,
     detectColumnMappings
 };

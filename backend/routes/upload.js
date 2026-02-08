@@ -1,34 +1,30 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+import mongoose from 'mongoose';
+import { GridFSBucket, ObjectId } from 'mongodb';
+import { Readable } from 'stream';
 import Case from '../models/Case.js';
 import Evidence from '../models/Evidence.js';
-import { parseFile, saveEvidenceToDatabase } from '../services/fileParser.js';
+import { parseCSVFromBuffer, parseExcelFromBuffer, saveEvidenceToDatabase } from '../services/fileParser.js';
 
 const router = express.Router({ mergeParams: true });
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
+// GridFS bucket (initialized lazily)
+let gridFSBucket = null;
+
+function getGridFSBucket() {
+    if (!gridFSBucket && mongoose.connection.db) {
+        gridFSBucket = new GridFSBucket(mongoose.connection.db, {
+            bucketName: 'uploads'
+        });
+    }
+    return gridFSBucket;
 }
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const caseDir = path.join(uploadsDir, req.params.caseId);
-        if (!fs.existsSync(caseDir)) {
-            fs.mkdirSync(caseDir, { recursive: true });
-        }
-        cb(null, caseDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
-        cb(null, uniqueName);
-    }
-});
+// Configure multer for memory storage (files go to buffer, then to MongoDB)
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
     const allowedTypes = ['.csv', '.xlsx', '.xls'];
@@ -53,8 +49,68 @@ const upload = multer({
 const uploadJobs = new Map();
 
 /**
+ * Upload file buffer to GridFS
+ */
+async function uploadToGridFS(buffer, filename, metadata = {}) {
+    const bucket = getGridFSBucket();
+    if (!bucket) {
+        throw new Error('MongoDB connection not ready');
+    }
+
+    return new Promise((resolve, reject) => {
+        const uploadStream = bucket.openUploadStream(filename, {
+            metadata
+        });
+
+        const readableStream = Readable.from(buffer);
+
+        readableStream
+            .pipe(uploadStream)
+            .on('error', reject)
+            .on('finish', () => {
+                resolve({
+                    fileId: uploadStream.id,
+                    filename: uploadStream.filename
+                });
+            });
+    });
+}
+
+/**
+ * Download file from GridFS as buffer
+ */
+async function downloadFromGridFS(fileId) {
+    const bucket = getGridFSBucket();
+    if (!bucket) {
+        throw new Error('MongoDB connection not ready');
+    }
+
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        const downloadStream = bucket.openDownloadStream(new ObjectId(fileId));
+
+        downloadStream
+            .on('data', chunk => chunks.push(chunk))
+            .on('error', reject)
+            .on('end', () => resolve(Buffer.concat(chunks)));
+    });
+}
+
+/**
+ * Delete file from GridFS
+ */
+async function deleteFromGridFS(fileId) {
+    const bucket = getGridFSBucket();
+    if (!bucket) {
+        throw new Error('MongoDB connection not ready');
+    }
+
+    await bucket.delete(new ObjectId(fileId));
+}
+
+/**
  * POST /api/cases/:caseId/upload
- * Upload forensic export file
+ * Upload forensic export file (stored in MongoDB GridFS)
  */
 router.post('/', upload.single('file'), async (req, res, next) => {
     try {
@@ -63,10 +119,6 @@ router.post('/', upload.single('file'), async (req, res, next) => {
         // Validate case exists
         const caseDoc = await Case.findById(caseId);
         if (!caseDoc) {
-            // Clean up uploaded file
-            if (req.file) {
-                fs.unlinkSync(req.file.path);
-            }
             return res.status(404).json({
                 success: false,
                 error: { message: 'Case not found' }
@@ -128,11 +180,30 @@ async function processUpload(jobId, caseId, caseDoc, file) {
     const job = uploadJobs.get(jobId);
 
     try {
-        // Parse file
-        job.status = 'parsing';
-        const parseResult = await parseFile(file.path, caseId, (count) => {
-            job.progress = count;
+        // Upload file to GridFS first
+        job.status = 'uploading';
+        const gridFSResult = await uploadToGridFS(file.buffer, file.originalname, {
+            caseId,
+            mimetype: file.mimetype,
+            uploadedAt: new Date()
         });
+
+        // Parse file from buffer
+        job.status = 'parsing';
+        const ext = path.extname(file.originalname).toLowerCase();
+
+        let parseResult;
+        if (ext === '.csv') {
+            parseResult = await parseCSVFromBuffer(file.buffer, caseId, (count) => {
+                job.progress = count;
+            });
+        } else if (['.xlsx', '.xls'].includes(ext)) {
+            parseResult = await parseExcelFromBuffer(file.buffer, caseId, (count) => {
+                job.progress = count;
+            });
+        } else {
+            throw new Error(`Unsupported file format: ${ext}`);
+        }
 
         job.totalRecords = parseResult.records.length;
         job.status = 'saving';
@@ -141,12 +212,14 @@ async function processUpload(jobId, caseId, caseDoc, file) {
         const savedCount = await saveEvidenceToDatabase(parseResult.records);
         job.savedRecords = savedCount;
 
-        // Update case
+        // Update case with file info
         caseDoc.uploadedFiles.push({
-            filename: file.filename,
+            fileId: gridFSResult.fileId.toString(),
+            filename: gridFSResult.filename,
             originalName: file.originalname,
             mimetype: file.mimetype,
-            size: file.size
+            size: file.size,
+            recordsImported: savedCount
         });
         caseDoc.evidenceCount = await Evidence.countDocuments({ caseId });
         await caseDoc.save();
@@ -157,13 +230,7 @@ async function processUpload(jobId, caseId, caseDoc, file) {
     } catch (error) {
         job.status = 'failed';
         job.error = error.message;
-
-        // Optionally clean up file on failure
-        try {
-            fs.unlinkSync(file.path);
-        } catch (e) {
-            console.error('Failed to clean up file:', e);
-        }
+        console.error('Upload processing error:', error);
     }
 }
 
@@ -212,8 +279,45 @@ router.get('/files', async (req, res, next) => {
 });
 
 /**
+ * GET /api/cases/:caseId/upload/files/:fileId/download
+ * Download original uploaded file from GridFS
+ */
+router.get('/files/:fileId/download', async (req, res, next) => {
+    try {
+        const caseDoc = await Case.findById(req.params.caseId);
+
+        if (!caseDoc) {
+            return res.status(404).json({
+                success: false,
+                error: { message: 'Case not found' }
+            });
+        }
+
+        const fileInfo = caseDoc.uploadedFiles.find(
+            f => f.fileId === req.params.fileId
+        );
+
+        if (!fileInfo) {
+            return res.status(404).json({
+                success: false,
+                error: { message: 'File not found' }
+            });
+        }
+
+        const buffer = await downloadFromGridFS(req.params.fileId);
+
+        res.setHeader('Content-Type', fileInfo.mimetype || 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileInfo.originalName}"`);
+        res.send(buffer);
+
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
  * DELETE /api/cases/:caseId/upload/files/:fileId
- * Remove uploaded file reference (doesn't delete parsed evidence)
+ * Remove uploaded file from GridFS and case
  */
 router.delete('/files/:fileId', async (req, res, next) => {
     try {
@@ -227,7 +331,7 @@ router.delete('/files/:fileId', async (req, res, next) => {
         }
 
         const fileIndex = caseDoc.uploadedFiles.findIndex(
-            f => f._id.toString() === req.params.fileId
+            f => f.fileId === req.params.fileId
         );
 
         if (fileIndex === -1) {
@@ -237,16 +341,11 @@ router.delete('/files/:fileId', async (req, res, next) => {
             });
         }
 
-        const file = caseDoc.uploadedFiles[fileIndex];
-
-        // Try to delete physical file
+        // Delete from GridFS
         try {
-            const filePath = path.join(uploadsDir, req.params.caseId, file.filename);
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
+            await deleteFromGridFS(req.params.fileId);
         } catch (e) {
-            console.error('Failed to delete file:', e);
+            console.error('Failed to delete file from GridFS:', e);
         }
 
         // Remove from case document
