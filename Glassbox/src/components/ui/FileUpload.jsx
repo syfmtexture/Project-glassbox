@@ -3,7 +3,7 @@ import { Upload, File, X, CheckCircle } from 'lucide-react'
 import { clsx } from 'clsx'
 import Button from './Button'
 
-function FileUpload({ onUpload, accept = '.csv,.xlsx,.xls', disabled = false }) {
+function FileUpload({ onUpload, accept = '.csv,.xlsx,.xls,.png,.jpg,.jpeg,.webp,.mp3,.ogg,.wav,.m4a,.opus', disabled = false }) {
     const [dragActive, setDragActive] = useState(false)
     const [file, setFile] = useState(null)
     const [uploading, setUploading] = useState(false)
@@ -94,7 +94,7 @@ function FileUpload({ onUpload, accept = '.csv,.xlsx,.xls', disabled = false }) 
                         <span className="text-[var(--color-accent-primary)] font-medium">Click to upload</span> or drag and drop
                     </p>
                     <p className="text-xs text-[var(--color-text-tertiary)]">
-                        CSV, XLSX, or XLS (max 100MB)
+                        CSV, XLSX, Images (OCR), or Audio (Transcription) (max 100MB)
                     </p>
                 </div>
             ) : (

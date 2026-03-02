@@ -447,7 +447,7 @@ function CaseDetail() {
                 <div className="p-6">
                     <FileUpload onUpload={handleUpload} />
                     <p className="text-sm text-[var(--color-text-secondary)] mt-4">
-                        Supports CSV and Excel files exported from forensic tools like Cellebrite, Oxygen, etc.
+                        Supports forensic exports (CSV/Excel), screenshots (OCR), and voice notes (Transcription).
                     </p>
                 </div>
             </Modal>

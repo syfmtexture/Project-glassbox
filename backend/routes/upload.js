@@ -8,6 +8,7 @@ import { Readable } from 'stream';
 import Case from '../models/Case.js';
 import Evidence from '../models/Evidence.js';
 import { parseCSVFromBuffer, parseExcelFromBuffer, saveEvidenceToDatabase } from '../services/fileParser.js';
+import { extractTextFromImage, transcribeAudio } from '../services/mediaProcessor.js';
 
 const router = express.Router({ mergeParams: true });
 
@@ -27,7 +28,7 @@ function getGridFSBucket() {
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['.csv', '.xlsx', '.xls'];
+    const allowedTypes = ['.csv', '.xlsx', '.xls', '.png', '.jpg', '.jpeg', '.webp', '.mp3', '.ogg', '.wav', '.m4a', '.opus'];
     const ext = path.extname(file.originalname).toLowerCase();
 
     if (allowedTypes.includes(ext)) {
@@ -192,7 +193,12 @@ async function processUpload(jobId, caseId, caseDoc, file) {
         job.status = 'parsing';
         const ext = path.extname(file.originalname).toLowerCase();
 
+        const imageTypes = ['.png', '.jpg', '.jpeg', '.webp'];
+        const audioTypes = ['.mp3', '.ogg', '.wav', '.m4a', '.opus'];
+
         let parseResult;
+        let isMedia = false;
+
         if (ext === '.csv') {
             parseResult = await parseCSVFromBuffer(file.buffer, caseId, (count) => {
                 job.progress = count;
@@ -201,6 +207,36 @@ async function processUpload(jobId, caseId, caseDoc, file) {
             parseResult = await parseExcelFromBuffer(file.buffer, caseId, (count) => {
                 job.progress = count;
             });
+        } else if (imageTypes.includes(ext)) {
+            job.status = 'processing media (OCR)';
+            isMedia = true;
+            const extractedText = await extractTextFromImage(file.buffer, file.originalname);
+            parseResult = {
+                records: [{
+                    caseId,
+                    type: 'media',
+                    source: file.originalname,
+                    content: extractedText,
+                    sender: 'media_upload',
+                    timestamp: new Date()
+                }],
+                totalRows: 1
+            };
+        } else if (audioTypes.includes(ext)) {
+            job.status = 'processing media (Audio Transcription)';
+            isMedia = true;
+            const transcribedText = await transcribeAudio(file.buffer, file.originalname, file.mimetype);
+            parseResult = {
+                records: [{
+                    caseId,
+                    type: 'media',
+                    source: file.originalname,
+                    content: transcribedText,
+                    sender: 'media_upload',
+                    timestamp: new Date()
+                }],
+                totalRows: 1
+            };
         } else {
             throw new Error(`Unsupported file format: ${ext}`);
         }
