@@ -114,10 +114,10 @@ function Timeline() {
                     <ArrowLeft size={20} />
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                    <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-accent-primary)] tracking-tight mb-1">
                         Timeline View
                     </h1>
-                    <p className="text-[var(--color-text-secondary)]">
+                    <p className="text-[var(--color-text-secondary)] font-medium">
                         {caseData?.caseName} — Temporal distribution of evidence
                     </p>
                 </div>

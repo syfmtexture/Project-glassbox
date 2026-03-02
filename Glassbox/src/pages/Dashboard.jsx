@@ -89,14 +89,23 @@ function Dashboard() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-end justify-between mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-1">
+                    <motion.h1
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-accent-primary)] mb-2 tracking-tight"
+                    >
                         Dashboard
-                    </h1>
-                    <p className="text-[var(--color-text-secondary)]">
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-[var(--color-text-secondary)] font-medium text-lg"
+                    >
                         Forensic triage command center
-                    </p>
+                    </motion.p>
                 </div>
                 <Button icon={<Plus size={18} />} onClick={() => setShowNewCase(true)}>
                     New Case
@@ -111,38 +120,42 @@ function Dashboard() {
                 className="grid grid-cols-4 gap-4"
             >
                 <motion.div variants={itemVariants}>
-                    <GlassCard hover={false} className="text-center">
-                        <div className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">
+                    <GlassCard hover={false} className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="text-4xl font-black text-[var(--color-text-primary)] mb-2 tracking-tight">
                             {stats.totalCases}
                         </div>
-                        <div className="text-sm text-[var(--color-text-secondary)]">Total Cases</div>
+                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Total Cases</div>
                     </GlassCard>
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                    <GlassCard hover={false} className="text-center">
-                        <div className="text-3xl font-bold text-[var(--color-accent-success)] mb-1">
+                    <GlassCard hover={false} className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-success)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="text-4xl font-black text-[var(--color-accent-success)] mb-2 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)] tracking-tight">
                             {stats.activeCases}
                         </div>
-                        <div className="text-sm text-[var(--color-text-secondary)]">Active Cases</div>
+                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Active Cases</div>
                     </GlassCard>
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                    <GlassCard hover={false} className="text-center">
-                        <div className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">
+                    <GlassCard hover={false} className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="text-4xl font-black text-[var(--color-text-primary)] mb-2 tracking-tight">
                             {stats.totalEvidence.toLocaleString()}
                         </div>
-                        <div className="text-sm text-[var(--color-text-secondary)]">Evidence Items</div>
+                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Evidence Items</div>
                     </GlassCard>
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                    <GlassCard hover={false} className="text-center">
-                        <div className="text-3xl font-bold text-[var(--color-accent-warning)] mb-1">
+                    <GlassCard hover={false} className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-critical)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="text-4xl font-black text-[var(--color-accent-critical)] mb-2 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)] tracking-tight">
                             {stats.highPriority}
                         </div>
-                        <div className="text-sm text-[var(--color-text-secondary)]">High Priority</div>
+                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">High Priority</div>
                     </GlassCard>
                 </motion.div>
             </motion.div>

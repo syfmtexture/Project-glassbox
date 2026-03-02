@@ -71,10 +71,10 @@ function FileUpload({ onUpload, accept = '.csv,.xlsx,.xls,.png,.jpg,.jpeg,.webp,
             {!file ? (
                 <div
                     className={clsx(
-                        'relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200',
+                        'relative border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 group',
                         dragActive
-                            ? 'border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]/5'
-                            : 'border-[var(--color-border-glass)] hover:border-[var(--color-text-tertiary)]',
+                            ? 'border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]/10 shadow-[0_0_30px_rgba(37,99,235,0.15)] scale-[1.02]'
+                            : 'border-[var(--color-border-glass)] hover:border-[var(--color-accent-primary)] hover:bg-[var(--color-bg-glass)]',
                         disabled && 'opacity-50 cursor-not-allowed'
                     )}
                     onDragEnter={handleDrag}
@@ -89,11 +89,13 @@ function FileUpload({ onUpload, accept = '.csv,.xlsx,.xls,.png,.jpg,.jpeg,.webp,
                         disabled={disabled}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                     />
-                    <Upload className="mx-auto mb-3 text-[var(--color-text-tertiary)]" size={32} />
-                    <p className="text-sm text-[var(--color-text-secondary)] mb-1">
-                        <span className="text-[var(--color-accent-primary)] font-medium">Click to upload</span> or drag and drop
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-border-subtle)] flex items-center justify-center group-hover:scale-110 transition-transform duration-300 group-hover:bg-[var(--color-accent-primary)]/10">
+                        <Upload className="text-[var(--color-text-secondary)] group-hover:text-[var(--color-accent-primary)] transition-colors duration-300" size={32} />
+                    </div>
+                    <p className="text-base font-semibold text-[var(--color-text-primary)] mb-2">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-cyan)] font-bold tracking-wide">Select files</span> to upload or drag & drop here
                     </p>
-                    <p className="text-xs text-[var(--color-text-tertiary)]">
+                    <p className="text-sm font-medium text-[var(--color-text-tertiary)] tracking-wide">
                         CSV, XLSX, Images (OCR), or Audio (Transcription) (max 100MB)
                     </p>
                 </div>

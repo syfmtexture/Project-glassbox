@@ -8,9 +8,9 @@ const variants = {
 }
 
 const sizes = {
-    sm: 'px-3 py-2 text-xs',
-    md: 'px-4 py-2.5 text-sm',
-    lg: 'px-6 py-3 text-base',
+    sm: 'px-4 py-2 text-xs font-semibold',
+    md: 'px-6 py-3 text-sm font-semibold tracking-wide',
+    lg: 'px-8 py-4 text-base font-bold tracking-wide break-words',
 }
 
 function Button({

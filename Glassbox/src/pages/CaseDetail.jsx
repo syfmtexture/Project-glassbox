@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
     ArrowLeft, Upload, Zap, Clock, BarChart2, Users,
     Edit, Trash2, MoreVertical, FileText, AlertTriangle,
-    MessageSquare, Phone, MapPin, User
+    MessageSquare, Phone, MapPin, User, Smartphone
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import GlassCard from '../components/ui/GlassCard'
@@ -232,7 +232,7 @@ function CaseDetail() {
                     </Link>
                     <div>
                         <div className="flex items-center gap-3 mb-1">
-                            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                            <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-accent-primary)] tracking-tight">
                                 {caseData.caseName}
                             </h1>
                             <StatusBadge status={caseData.status} />
@@ -259,9 +259,10 @@ function CaseDetail() {
             {/* Case Info & Summary Row */}
             <div className="grid grid-cols-3 gap-4">
                 {/* Case Info */}
-                <GlassCard hover={false}>
-                    <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
-                        Device Information
+                <GlassCard hover={false} className="relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <h3 className="text-sm font-bold text-[var(--color-text-tertiary)] mb-4 uppercase tracking-widest border-b border-[var(--color-border-subtle)] pb-2 flex items-center gap-2">
+                        <Smartphone size={16} className="text-[var(--color-accent-primary)]" /> Device Information
                     </h3>
                     <div className="space-y-2 text-sm">
                         {caseData.deviceInfo?.deviceType && (
@@ -292,11 +293,12 @@ function CaseDetail() {
                 </GlassCard>
 
                 {/* Evidence Summary */}
-                <GlassCard hover={false} className="col-span-2">
-                    <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
-                        Evidence Breakdown
+                <GlassCard hover={false} className="col-span-2 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-purple)]/5 to-[var(--color-accent-primary)]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <h3 className="text-sm font-bold text-[var(--color-text-tertiary)] mb-4 uppercase tracking-widest border-b border-[var(--color-border-subtle)] pb-2 flex items-center gap-2">
+                        <BarChart2 size={16} className="text-[var(--color-accent-purple)]" /> Evidence Breakdown
                     </h3>
-                    <div className="grid grid-cols-5 gap-3">
+                    <div className="grid grid-cols-5 gap-3 pt-2">
                         {['message', 'call', 'location', 'contact', 'other'].map(type => {
                             const typeData = summary.find(s => s.type === type) || { count: 0, highPriority: 0 }
                             return (

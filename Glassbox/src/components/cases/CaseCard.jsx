@@ -34,56 +34,59 @@ function CaseCard({ caseData }) {
 
     return (
         <Link to={`/case/${_id}`} className="block no-underline">
-            <GlassCard className="group cursor-pointer">
-                <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-primary)]/10 flex items-center justify-center">
-                            <Smartphone size={20} className="text-[var(--color-accent-primary)]" />
+            <GlassCard className="group cursor-pointer relative overflow-hidden transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative z-10">
+                    <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--color-accent-primary)]/10 to-[var(--color-accent-purple)]/10 flex items-center justify-center border border-[var(--color-accent-primary)]/20 shadow-inner group-hover:scale-105 transition-transform duration-300">
+                                <Smartphone size={24} className="text-[var(--color-accent-primary)]" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-[var(--color-text-primary)] m-0 group-hover:text-[var(--color-accent-primary)] transition-colors tracking-tight">
+                                    {caseName}
+                                </h3>
+                                {caseNumber && (
+                                    <p className="text-sm font-semibold text-[var(--color-text-tertiary)] m-0 mt-0.5 uppercase tracking-wide">
+                                        Case #{caseNumber}
+                                    </p>
+                                )}
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="text-base font-semibold text-[var(--color-text-primary)] m-0 group-hover:text-[var(--color-accent-primary)] transition-colors">
-                                {caseName}
-                            </h3>
-                            {caseNumber && (
-                                <p className="text-xs text-[var(--color-text-secondary)] m-0">
-                                    Case #{caseNumber}
-                                </p>
+                        <StatusBadge status={status} />
+                    </div>
+
+                    {/* Stats Row */}
+                    <div className="flex items-center gap-5 mb-4 text-sm font-medium">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-border-subtle)]/50 text-[var(--color-text-secondary)]">
+                            <FileText size={16} />
+                            <span>{evidenceCount.toLocaleString()} items</span>
+                        </div>
+                        {highPriorityCount > 0 && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-accent-critical)]/10 text-[var(--color-accent-critical)] border border-[var(--color-accent-critical)]/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
+                                <AlertTriangle size={16} />
+                                <span>{highPriorityCount} high priority</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-4 border-t border-[var(--color-border-subtle)]">
+                        <div className="flex items-center gap-2 text-xs font-medium text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                            {investigator && (
+                                <span>{investigator}</span>
+                            )}
+                            {deviceInfo?.deviceType && (
+                                <>
+                                    <span className="text-[var(--color-border-glass)]">•</span>
+                                    <span>{deviceInfo.deviceType}</span>
+                                </>
                             )}
                         </div>
-                    </div>
-                    <StatusBadge status={status} />
-                </div>
-
-                {/* Stats Row */}
-                <div className="flex items-center gap-4 mb-3 text-sm">
-                    <div className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
-                        <FileText size={14} />
-                        <span>{evidenceCount.toLocaleString()} items</span>
-                    </div>
-                    {highPriorityCount > 0 && (
-                        <div className="flex items-center gap-1.5 text-[var(--color-accent-warning)]">
-                            <AlertTriangle size={14} />
-                            <span>{highPriorityCount} high priority</span>
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-text-tertiary)] bg-[var(--color-border-subtle)] px-2 py-1 rounded-md">
+                            <Clock size={12} />
+                            <span>{formatDate(updatedAt)}</span>
                         </div>
-                    )}
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-3 border-t border-[var(--color-border-glass)]">
-                    <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
-                        {investigator && (
-                            <span>{investigator}</span>
-                        )}
-                        {deviceInfo?.deviceType && (
-                            <>
-                                <span>•</span>
-                                <span>{deviceInfo.deviceType}</span>
-                            </>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-[var(--color-text-tertiary)]">
-                        <Clock size={12} />
-                        <span>{formatDate(updatedAt)}</span>
                     </div>
                 </div>
             </GlassCard>
