@@ -59,7 +59,7 @@ function CaseDetail() {
             setSummary(summaryResult.data || [])
             setSources(sourcesResult.data || [])
             setTags(tagsResult.data || [])
-        } catch (error) {
+        } catch {
             toast.error('Failed to load case')
             navigate('/')
         } finally {
@@ -88,7 +88,7 @@ function CaseDetail() {
             if (result.pagination) {
                 setPagination(result.pagination)
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to load evidence')
         } finally {
             setEvidenceLoading(false)
@@ -127,7 +127,7 @@ function CaseDetail() {
             setTimeout(pollStatus, 2000)
 
             setShowUpload(false)
-        } catch (error) {
+        } catch {
             toast.error('Upload failed')
         }
     }
@@ -167,7 +167,7 @@ function CaseDetail() {
             toast.success('Case updated')
             setShowEdit(false)
             loadCase()
-        } catch (error) {
+        } catch {
             toast.error('Failed to update case')
         } finally {
             setUpdating(false)
@@ -181,7 +181,7 @@ function CaseDetail() {
             await casesApi.delete(id)
             toast.success('Case deleted')
             navigate('/')
-        } catch (error) {
+        } catch {
             toast.error('Failed to delete case')
         }
     }
@@ -192,7 +192,7 @@ function CaseDetail() {
             setEvidence(prev => prev.map(e =>
                 e._id === evidenceId ? { ...e, isBookmarked: !e.isBookmarked } : e
             ))
-        } catch (error) {
+        } catch {
             toast.error('Failed to update bookmark')
         }
     }
@@ -204,13 +204,7 @@ function CaseDetail() {
         { id: 'unreviewed', label: 'Unreviewed' },
     ]
 
-    // Evidence type icons
-    const typeIcons = {
-        message: <MessageSquare size={14} />,
-        call: <Phone size={14} />,
-        location: <MapPin size={14} />,
-        contact: <User size={14} />,
-    }
+
 
     if (loading) {
         return (

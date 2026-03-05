@@ -23,7 +23,7 @@ export function ToastProvider({ children }) {
     const [toasts, setToasts] = useState([])
 
     const addToast = useCallback((message, type = 'info') => {
-        const id = Date.now()
+        const id = Math.random().toString(36).substring(2, 9) + Date.now().toString(36)
         setToasts(prev => [...prev, { id, message, type }])
 
         setTimeout(() => {
@@ -78,6 +78,7 @@ function Toast({ toast, onClose }) {
     )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
     const context = useContext(ToastContext)
     if (!context) {

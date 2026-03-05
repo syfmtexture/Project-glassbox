@@ -47,7 +47,7 @@ function Dashboard() {
                 totalEvidence,
                 highPriority,
             })
-        } catch (error) {
+        } catch {
             toast.error('Failed to load cases')
         } finally {
             setLoading(false)

@@ -18,6 +18,7 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
         if (evidenceId) {
             loadEvidence()
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [evidenceId])
 
     const loadEvidence = async () => {
@@ -26,7 +27,7 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
             const result = await evidenceApi.get(caseId, evidenceId)
             setEvidence(result.data)
             setNotes(result.data.notes || '')
-        } catch (error) {
+        } catch {
             toast.error('Failed to load evidence details')
         } finally {
             setLoading(false)
@@ -38,7 +39,7 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
             await evidenceApi.toggleBookmark(caseId, evidenceId)
             setEvidence(prev => ({ ...prev, isBookmarked: !prev.isBookmarked }))
             onUpdate?.()
-        } catch (error) {
+        } catch {
             toast.error('Failed to update bookmark')
         }
     }
@@ -49,7 +50,7 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
             setEvidence(prev => ({ ...prev, isReviewed: true }))
             onUpdate?.()
             toast.success('Marked as reviewed')
-        } catch (error) {
+        } catch {
             toast.error('Failed to update')
         }
     }
@@ -60,7 +61,7 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
             await evidenceApi.update(caseId, evidenceId, { notes })
             toast.success('Notes saved')
             onUpdate?.()
-        } catch (error) {
+        } catch {
             toast.error('Failed to save notes')
         } finally {
             setSaving(false)
@@ -78,7 +79,7 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
             setEvidence(prev => ({ ...prev, tags: updatedTags }))
             setNewTag('')
             onUpdate?.()
-        } catch (error) {
+        } catch {
             toast.error('Failed to add tag')
         }
     }
@@ -90,7 +91,7 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
             await evidenceApi.update(caseId, evidenceId, { tags: updatedTags })
             setEvidence(prev => ({ ...prev, tags: updatedTags }))
             onUpdate?.()
-        } catch (error) {
+        } catch {
             toast.error('Failed to remove tag')
         }
     }
@@ -111,7 +112,7 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
     if (!evidence) return null
 
     const { type, content, sender, receiver, timestamp, source, analysis = {} } = evidence
-    const { priority = 'low', priorityScore = 0, flags = [], summary, sentiment, entities = [] } = analysis
+    const { priority = 'low', priorityScore = 0, flags = [], summary, sentiment } = analysis
 
     return (
         <>

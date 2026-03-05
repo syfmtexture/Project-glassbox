@@ -87,16 +87,7 @@ function Timeline() {
         item.total > (max?.total || 0) ? item : max
         , null)
 
-    // Color for bars based on activity level
-    const getBarColor = (value, max) => {
-        const intensity = value / max
-        if (intensity > 0.8) return 'var(--color-accent-critical)'
-        if (intensity > 0.5) return 'var(--color-accent-warning)'
-        if (intensity > 0.2) return 'var(--color-accent-primary)'
-        return 'var(--color-text-tertiary)'
-    }
 
-    const maxTotal = Math.max(...timelineData.map(d => d.total), 1)
 
     if (loading) {
         return (

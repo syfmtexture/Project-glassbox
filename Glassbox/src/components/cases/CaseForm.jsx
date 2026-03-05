@@ -41,10 +41,11 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
             <div className="p-6 space-y-4">
                 {/* Case Name */}
                 <div>
-                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+                    <label htmlFor="caseName" className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
                         Case Name <span className="text-[var(--color-accent-critical)]">*</span>
                     </label>
                     <input
+                        id="caseName"
                         type="text"
                         name="caseName"
                         value={formData.caseName}
@@ -58,10 +59,11 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
                 {/* Case Number & Investigator */}
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+                        <label htmlFor="caseNumber" className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
                             Case Number
                         </label>
                         <input
+                            id="caseNumber"
                             type="text"
                             name="caseNumber"
                             value={formData.caseNumber}
@@ -71,10 +73,11 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+                        <label htmlFor="investigator" className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
                             Investigator
                         </label>
                         <input
+                            id="investigator"
                             type="text"
                             name="investigator"
                             value={formData.investigator}
@@ -87,10 +90,11 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
 
                 {/* Description */}
                 <div>
-                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+                    <label htmlFor="description" className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
                         Description
                     </label>
                     <textarea
+                        id="description"
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
@@ -106,10 +110,11 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
                     </h4>
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-xs text-[var(--color-text-secondary)] mb-1">
+                            <label htmlFor="deviceType" className="block text-xs text-[var(--color-text-secondary)] mb-1">
                                 Device Type
                             </label>
                             <input
+                                id="deviceType"
                                 type="text"
                                 name="deviceType"
                                 value={formData.deviceType}
@@ -119,10 +124,11 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-[var(--color-text-secondary)] mb-1">
+                            <label htmlFor="imei" className="block text-xs text-[var(--color-text-secondary)] mb-1">
                                 IMEI
                             </label>
                             <input
+                                id="imei"
                                 type="text"
                                 name="imei"
                                 value={formData.imei}
@@ -132,10 +138,11 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-[var(--color-text-secondary)] mb-1">
+                            <label htmlFor="owner" className="block text-xs text-[var(--color-text-secondary)] mb-1">
                                 Owner
                             </label>
                             <input
+                                id="owner"
                                 type="text"
                                 name="owner"
                                 value={formData.owner}

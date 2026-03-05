@@ -1,9 +1,8 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Menu, Moon, Sun, Search } from 'lucide-react'
 import { useState } from 'react'
 
 function Header({ darkMode, setDarkMode }) {
-    const location = useLocation()
     const [searchOpen, setSearchOpen] = useState(false)
 
     return (

@@ -9,13 +9,7 @@ import Contacts from './pages/Contacts'
 import { ToastProvider } from './components/ui/Toast'
 
 function App() {
-    const [darkMode, setDarkMode] = useState(false)
-
-    useEffect(() => {
-        // Check system preference
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-        setDarkMode(prefersDark)
-    }, [])
+    const [darkMode, setDarkMode] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light')
