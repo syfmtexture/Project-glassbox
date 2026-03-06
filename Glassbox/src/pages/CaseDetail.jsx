@@ -17,6 +17,9 @@ import {
     MapPin,
     User,
     Smartphone,
+    Download,
+    File,
+    X,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import GlassCard from '../components/ui/GlassCard'
@@ -55,7 +58,10 @@ function CaseDetail() {
     const [selectedEvidence, setSelectedEvidence] = useState(null)
     const [showUpload, setShowUpload] = useState(false)
     const [showEdit, setShowEdit] = useState(false)
+    const [showFiles, setShowFiles] = useState(true)
     const [analyzing, setAnalyzing] = useState(false)
+    const [deletingFileId, setDeletingFileId] = useState(null)
+    const [confirmDelete, setConfirmDelete] = useState(null) // { fileId, fileName }
     const [updating, setUpdating] = useState(false)
 
     // Load case data
@@ -203,6 +209,29 @@ function CaseDetail() {
             navigate('/')
         } catch {
             toast.error('Failed to delete case')
+        }
+    }
+
+    const handleDeleteFile = (fileId, fileName) => {
+        setConfirmDelete({ fileId, fileName })
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!confirmDelete) return
+        const { fileId, fileName } = confirmDelete
+        setConfirmDelete(null)
+        setDeletingFileId(fileId)
+        try {
+            const result = await uploadApi.deleteFile(id, fileId)
+            toast.success(
+                `Removed "${fileName}" and ${result.data?.deletedEvidence || 0} evidence records`
+            )
+            loadCase()
+            loadEvidence()
+        } catch {
+            toast.error('Failed to delete file')
+        } finally {
+            setDeletingFileId(null)
         }
     }
 
@@ -378,6 +407,106 @@ function CaseDetail() {
                 </Link>
             </div>
 
+            {/* Uploaded Files Section */}
+            {caseData.uploadedFiles?.length > 0 && (
+                <GlassCard hover={false} className="relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest flex items-center gap-2">
+                            <File size={16} className="text-[var(--color-accent-cyan)]" />
+                            Uploaded Files ({caseData.uploadedFiles.length})
+                        </h3>
+                        <button
+                            onClick={() => setShowFiles((v) => !v)}
+                            className="btn-ghost btn-icon p-1.5 rounded-lg"
+                            title={showFiles ? 'Collapse' : 'Expand'}
+                        >
+                            <motion.div
+                                animate={{ rotate: showFiles ? 0 : -90 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <ArrowLeft size={14} className="rotate-[-90deg]" />
+                            </motion.div>
+                        </button>
+                    </div>
+                    <AnimatePresence>
+                        {showFiles && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="overflow-hidden"
+                            >
+                                <div className="space-y-2">
+                                    {caseData.uploadedFiles.map((file) => (
+                                        <div
+                                            key={file.fileId}
+                                            className="flex items-center gap-3 p-3 rounded-xl bg-[var(--color-bg-glass)] border border-[var(--color-border-subtle)] hover:border-[var(--color-border-glass)] transition-all group"
+                                        >
+                                            <div className="w-9 h-9 rounded-lg bg-[var(--color-accent-primary)]/10 flex items-center justify-center shrink-0">
+                                                <FileText
+                                                    size={18}
+                                                    className="text-[var(--color-accent-primary)]"
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                                                    {file.originalName}
+                                                </p>
+                                                <p className="text-xs text-[var(--color-text-tertiary)] flex items-center gap-2">
+                                                    <span>
+                                                        {file.size < 1024 * 1024
+                                                            ? `${(file.size / 1024).toFixed(1)} KB`
+                                                            : `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
+                                                    </span>
+                                                    <span>•</span>
+                                                    <span>
+                                                        {file.recordsImported} records
+                                                    </span>
+                                                    <span>•</span>
+                                                    <span>
+                                                        {new Date(
+                                                            file.uploadedAt
+                                                        ).toLocaleDateString()}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() =>
+                                                        handleDeleteFile(
+                                                            file.fileId,
+                                                            file.originalName
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        deletingFileId === file.fileId
+                                                    }
+                                                    className="btn-ghost btn-icon p-1.5 rounded-lg text-[var(--color-accent-danger)] hover:bg-[var(--color-accent-danger)]/10 transition-colors"
+                                                    title="Delete file and evidence"
+                                                >
+                                                    {deletingFileId === file.fileId ? (
+                                                        <span
+                                                            className="spinner"
+                                                            style={{
+                                                                width: 16,
+                                                                height: 16,
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <Trash2 size={16} />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </GlassCard>
+            )}
+
             {/* Evidence Section */}
             <GlassCard hover={false} padding="lg">
                 <div className="flex items-center justify-between mb-4">
@@ -497,6 +626,47 @@ function CaseDetail() {
                     onCancel={() => setShowEdit(false)}
                     loading={updating}
                 />
+            </Modal>
+
+            {/* Delete File Confirmation Modal */}
+            <Modal
+                isOpen={!!confirmDelete}
+                onClose={() => setConfirmDelete(null)}
+                size="sm"
+            >
+                <div className="p-6">
+                    <div className="flex items-start gap-4 mb-5">
+                        <div className="w-10 h-10 rounded-full bg-[var(--color-accent-danger)]/10 flex items-center justify-center shrink-0">
+                            <Trash2 size={20} className="text-[var(--color-accent-danger)]" />
+                        </div>
+                        <div>
+                            <h3 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">
+                                Delete File?
+                            </h3>
+                            <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                                This will permanently remove{' '}
+                                <span className="font-medium text-[var(--color-text-primary)]">
+                                    &ldquo;{confirmDelete?.fileName}&rdquo;
+                                </span>{' '}
+                                and all evidence records imported from it. This action cannot be undone.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-3">
+                        <button
+                            onClick={() => setConfirmDelete(null)}
+                            className="btn-ghost px-4 py-2 rounded-xl text-sm font-medium"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleConfirmDelete}
+                            className="px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--color-accent-danger)] text-white hover:opacity-90 transition-opacity"
+                        >
+                            Delete File
+                        </button>
+                    </div>
+                </div>
             </Modal>
         </div>
     )
