@@ -13,8 +13,8 @@ function Header({ darkMode, setDarkMode }) {
                     to="/"
                     className="flex items-center gap-3 no-underline transition-transform hover:scale-105"
                 >
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-accent-primary)] to-[var(--color-accent-purple)] flex items-center justify-center shadow-lg shadow-[var(--color-accent-primary)]/20">
-                        <span className="text-xl text-white">🥂</span>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-[var(--color-accent-primary)]/20 overflow-hidden bg-white/5 backdrop-blur-md border border-[var(--color-border-glass)]">
+                        <img src="/logo.png" alt="Glassbox Logo" className="w-8 h-8 object-contain" />
                     </div>
                     <div>
                         <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-text-secondary)] m-0 tracking-tight">
