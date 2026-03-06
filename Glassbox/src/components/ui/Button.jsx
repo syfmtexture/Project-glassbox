@@ -1,5 +1,6 @@
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { motion } from 'framer-motion'
 
 const variants = {
     primary: 'btn-primary',
@@ -25,7 +26,10 @@ function Button({
     ...props
 }) {
     return (
-        <button
+        <motion.button
+            whileHover={!loading && !disabled ? { scale: 1.03 } : {}}
+            whileTap={!loading && !disabled ? { scale: 0.95 } : {}}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
             className={twMerge(
                 clsx(
                     'btn',
@@ -47,7 +51,7 @@ function Button({
                     {!iconOnly && children}
                 </>
             )}
-        </button>
+        </motion.button>
     )
 }
 
