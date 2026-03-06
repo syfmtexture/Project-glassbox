@@ -37,9 +37,15 @@ function Dashboard() {
             setCases(result.data || [])
 
             // Calculate stats
-            const active = (result.data || []).filter(c => c.status === 'active').length
-            const totalEvidence = (result.data || []).reduce((sum, c) => sum + (c.evidenceCount || 0), 0)
-            const highPriority = (result.data || []).reduce((sum, c) => sum + (c.highPriorityCount || 0), 0)
+            const active = (result.data || []).filter((c) => c.status === 'active').length
+            const totalEvidence = (result.data || []).reduce(
+                (sum, c) => sum + (c.evidenceCount || 0),
+                0
+            )
+            const highPriority = (result.data || []).reduce(
+                (sum, c) => sum + (c.highPriorityCount || 0),
+                0
+            )
 
             setStats({
                 totalCases: result.pagination?.total || result.data?.length || 0,
@@ -77,13 +83,13 @@ function Dashboard() {
         hidden: { opacity: 0 },
         show: {
             opacity: 1,
-            transition: { staggerChildren: 0.1 }
-        }
+            transition: { staggerChildren: 0.1 },
+        },
     }
 
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0 }
+        show: { opacity: 1, y: 0 },
     }
 
     return (
@@ -120,42 +126,62 @@ function Dashboard() {
                 className="grid grid-cols-4 gap-4"
             >
                 <motion.div variants={itemVariants}>
-                    <GlassCard hover={false} className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group">
+                    <GlassCard
+                        hover={false}
+                        className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group"
+                    >
                         <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="text-4xl font-black text-[var(--color-text-primary)] mb-2 tracking-tight">
                             {stats.totalCases}
                         </div>
-                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Total Cases</div>
+                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                            Total Cases
+                        </div>
                     </GlassCard>
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                    <GlassCard hover={false} className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group">
+                    <GlassCard
+                        hover={false}
+                        className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group"
+                    >
                         <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-success)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="text-4xl font-black text-[var(--color-accent-success)] mb-2 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)] tracking-tight">
                             {stats.activeCases}
                         </div>
-                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Active Cases</div>
+                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                            Active Cases
+                        </div>
                     </GlassCard>
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                    <GlassCard hover={false} className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group">
+                    <GlassCard
+                        hover={false}
+                        className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group"
+                    >
                         <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="text-4xl font-black text-[var(--color-text-primary)] mb-2 tracking-tight">
                             {stats.totalEvidence.toLocaleString()}
                         </div>
-                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Evidence Items</div>
+                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                            Evidence Items
+                        </div>
                     </GlassCard>
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                    <GlassCard hover={false} className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group">
+                    <GlassCard
+                        hover={false}
+                        className="text-center flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden group"
+                    >
                         <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-critical)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="text-4xl font-black text-[var(--color-accent-critical)] mb-2 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)] tracking-tight">
                             {stats.highPriority}
                         </div>
-                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">High Priority</div>
+                        <div className="text-sm font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                            High Priority
+                        </div>
                     </GlassCard>
                 </motion.div>
             </motion.div>
@@ -166,11 +192,7 @@ function Dashboard() {
                     <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
                         Recent Cases
                     </h2>
-                    <button
-                        onClick={loadCases}
-                        className="btn-ghost btn-icon p-2"
-                        title="Refresh"
-                    >
+                    <button onClick={loadCases} className="btn-ghost btn-icon p-2" title="Refresh">
                         <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                     </button>
                 </div>
@@ -178,7 +200,10 @@ function Dashboard() {
                 {/* Filters */}
                 <div className="flex items-center gap-3 mb-4">
                     <div className="relative flex-1 max-w-md">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]" />
+                        <Search
+                            size={16}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]"
+                        />
                         <input
                             type="text"
                             placeholder="Search cases..."
@@ -202,7 +227,7 @@ function Dashboard() {
                 {/* Cases List */}
                 {loading ? (
                     <div className="grid grid-cols-2 gap-4">
-                        {[1, 2, 3, 4].map(i => (
+                        {[1, 2, 3, 4].map((i) => (
                             <div key={i} className="skeleton h-32 rounded-xl" />
                         ))}
                     </div>
@@ -211,9 +236,7 @@ function Dashboard() {
                         <p className="text-[var(--color-text-secondary)] mb-4">
                             No cases found. Create your first case to get started.
                         </p>
-                        <Button onClick={() => setShowNewCase(true)}>
-                            Create Case
-                        </Button>
+                        <Button onClick={() => setShowNewCase(true)}>Create Case</Button>
                     </div>
                 ) : (
                     <motion.div

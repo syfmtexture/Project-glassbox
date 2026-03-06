@@ -14,7 +14,10 @@ function EvidenceFilters({ onFilterChange, filters, sources = [], tags = [] }) {
             {/* Search and Quick Filters */}
             <div className="flex items-center gap-3">
                 <div className="relative flex-1">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]" />
+                    <Search
+                        size={16}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]"
+                    />
                     <input
                         type="text"
                         placeholder="Search evidence..."
@@ -99,7 +102,9 @@ function EvidenceFilters({ onFilterChange, filters, sources = [], tags = [] }) {
                         >
                             <option value="">All Sources</option>
                             {sources.map((source, i) => (
-                                <option key={i} value={source}>{source}</option>
+                                <option key={i} value={source}>
+                                    {source}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -116,7 +121,9 @@ function EvidenceFilters({ onFilterChange, filters, sources = [], tags = [] }) {
                         >
                             <option value="">All Tags</option>
                             {tags.map((tag, i) => (
-                                <option key={i} value={tag}>{tag}</option>
+                                <option key={i} value={tag}>
+                                    {tag}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -157,26 +164,30 @@ function EvidenceFilters({ onFilterChange, filters, sources = [], tags = [] }) {
                             <input
                                 type="checkbox"
                                 checked={filters.bookmarked === 'true'}
-                                onChange={(e) => handleChange('bookmarked', e.target.checked ? 'true' : '')}
+                                onChange={(e) =>
+                                    handleChange('bookmarked', e.target.checked ? 'true' : '')
+                                }
                                 className="w-4 h-4 rounded border-[var(--color-border-glass)]"
                             />
-                            <span className="text-sm text-[var(--color-text-primary)]">Bookmarked only</span>
+                            <span className="text-sm text-[var(--color-text-primary)]">
+                                Bookmarked only
+                            </span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={filters.reviewed === 'false'}
-                                onChange={(e) => handleChange('reviewed', e.target.checked ? 'false' : '')}
+                                onChange={(e) =>
+                                    handleChange('reviewed', e.target.checked ? 'false' : '')
+                                }
                                 className="w-4 h-4 rounded border-[var(--color-border-glass)]"
                             />
-                            <span className="text-sm text-[var(--color-text-primary)]">Unreviewed only</span>
+                            <span className="text-sm text-[var(--color-text-primary)]">
+                                Unreviewed only
+                            </span>
                         </label>
 
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onFilterChange({})}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => onFilterChange({})}>
                             Clear All
                         </Button>
                     </div>

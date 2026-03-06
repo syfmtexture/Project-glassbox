@@ -1,9 +1,22 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
-    ArrowLeft, Upload, Zap, Clock, BarChart2, Users,
-    Edit, Trash2, MoreVertical, FileText, AlertTriangle,
-    MessageSquare, Phone, MapPin, User, Smartphone
+    ArrowLeft,
+    Upload,
+    Zap,
+    Clock,
+    BarChart2,
+    Users,
+    Edit,
+    Trash2,
+    MoreVertical,
+    FileText,
+    AlertTriangle,
+    MessageSquare,
+    Phone,
+    MapPin,
+    User,
+    Smartphone,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import GlassCard from '../components/ui/GlassCard'
@@ -74,13 +87,20 @@ function CaseDetail() {
             let result
 
             if (activeTab === 'high-priority') {
-                result = await evidenceApi.getHighPriority(id, { ...filters, page: pagination.page })
+                result = await evidenceApi.getHighPriority(id, {
+                    ...filters,
+                    page: pagination.page,
+                })
             } else if (activeTab === 'bookmarked') {
                 result = await evidenceApi.getBookmarked(id)
                 // Wrap in standard format
-                result = { data: result.data, pagination: { page: 1, total: result.total, pages: 1 } }
+                result = {
+                    data: result.data,
+                    pagination: { page: 1, total: result.total, pages: 1 },
+                }
             } else {
-                const tabFilters = activeTab === 'unreviewed' ? { ...filters, reviewed: 'false' } : filters
+                const tabFilters =
+                    activeTab === 'unreviewed' ? { ...filters, reviewed: 'false' } : filters
                 result = await evidenceApi.list(id, { ...tabFilters, page: pagination.page })
             }
 
@@ -189,9 +209,11 @@ function CaseDetail() {
     const handleBookmark = async (evidenceId) => {
         try {
             await evidenceApi.toggleBookmark(id, evidenceId)
-            setEvidence(prev => prev.map(e =>
-                e._id === evidenceId ? { ...e, isBookmarked: !e.isBookmarked } : e
-            ))
+            setEvidence((prev) =>
+                prev.map((e) =>
+                    e._id === evidenceId ? { ...e, isBookmarked: !e.isBookmarked } : e
+                )
+            )
         } catch {
             toast.error('Failed to update bookmark')
         }
@@ -203,8 +225,6 @@ function CaseDetail() {
         { id: 'bookmarked', label: 'Bookmarked' },
         { id: 'unreviewed', label: 'Unreviewed' },
     ]
-
-
 
     if (loading) {
         return (
@@ -241,7 +261,11 @@ function CaseDetail() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <Button variant="ghost" icon={<Edit size={16} />} onClick={() => setShowEdit(true)}>
+                    <Button
+                        variant="ghost"
+                        icon={<Edit size={16} />}
+                        onClick={() => setShowEdit(true)}
+                    >
                         Edit
                     </Button>
                     <Button variant="ghost" icon={<Trash2 size={16} />} onClick={handleDeleteCase}>
@@ -256,31 +280,40 @@ function CaseDetail() {
                 <GlassCard hover={false} className="relative overflow-hidden group">
                     <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <h3 className="text-sm font-bold text-[var(--color-text-tertiary)] mb-4 uppercase tracking-widest border-b border-[var(--color-border-subtle)] pb-2 flex items-center gap-2">
-                        <Smartphone size={16} className="text-[var(--color-accent-primary)]" /> Device Information
+                        <Smartphone size={16} className="text-[var(--color-accent-primary)]" />{' '}
+                        Device Information
                     </h3>
                     <div className="space-y-2 text-sm">
                         {caseData.deviceInfo?.deviceType && (
                             <div className="flex justify-between">
                                 <span className="text-[var(--color-text-secondary)]">Device</span>
-                                <span className="text-[var(--color-text-primary)]">{caseData.deviceInfo.deviceType}</span>
+                                <span className="text-[var(--color-text-primary)]">
+                                    {caseData.deviceInfo.deviceType}
+                                </span>
                             </div>
                         )}
                         {caseData.deviceInfo?.owner && (
                             <div className="flex justify-between">
                                 <span className="text-[var(--color-text-secondary)]">Owner</span>
-                                <span className="text-[var(--color-text-primary)]">{caseData.deviceInfo.owner}</span>
+                                <span className="text-[var(--color-text-primary)]">
+                                    {caseData.deviceInfo.owner}
+                                </span>
                             </div>
                         )}
                         {caseData.deviceInfo?.imei && (
                             <div className="flex justify-between">
                                 <span className="text-[var(--color-text-secondary)]">IMEI</span>
-                                <span className="text-[var(--color-text-primary)] font-mono text-xs">{caseData.deviceInfo.imei}</span>
+                                <span className="text-[var(--color-text-primary)] font-mono text-xs">
+                                    {caseData.deviceInfo.imei}
+                                </span>
                             </div>
                         )}
                         {caseData.uploadedFiles?.length > 0 && (
                             <div className="flex justify-between">
                                 <span className="text-[var(--color-text-secondary)]">Files</span>
-                                <span className="text-[var(--color-text-primary)]">{caseData.uploadedFiles.length} uploaded</span>
+                                <span className="text-[var(--color-text-primary)]">
+                                    {caseData.uploadedFiles.length} uploaded
+                                </span>
                             </div>
                         )}
                     </div>
@@ -290,11 +323,15 @@ function CaseDetail() {
                 <GlassCard hover={false} className="col-span-2 relative overflow-hidden group">
                     <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-purple)]/5 to-[var(--color-accent-primary)]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <h3 className="text-sm font-bold text-[var(--color-text-tertiary)] mb-4 uppercase tracking-widest border-b border-[var(--color-border-subtle)] pb-2 flex items-center gap-2">
-                        <BarChart2 size={16} className="text-[var(--color-accent-purple)]" /> Evidence Breakdown
+                        <BarChart2 size={16} className="text-[var(--color-accent-purple)]" />{' '}
+                        Evidence Breakdown
                     </h3>
                     <div className="grid grid-cols-5 gap-3 pt-2">
-                        {['message', 'call', 'location', 'contact', 'other'].map(type => {
-                            const typeData = summary.find(s => s.type === type) || { count: 0, highPriority: 0 }
+                        {['message', 'call', 'location', 'contact', 'other'].map((type) => {
+                            const typeData = summary.find((s) => s.type === type) || {
+                                count: 0,
+                                highPriority: 0,
+                            }
                             return (
                                 <div key={type} className="text-center">
                                     <div className="text-xl font-semibold text-[var(--color-text-primary)]">
@@ -363,13 +400,16 @@ function CaseDetail() {
                 {/* Evidence List */}
                 {evidenceLoading ? (
                     <div className="space-y-3">
-                        {[1, 2, 3].map(i => (
+                        {[1, 2, 3].map((i) => (
                             <div key={i} className="skeleton h-24 rounded-xl" />
                         ))}
                     </div>
                 ) : evidence.length === 0 ? (
                     <div className="text-center py-12">
-                        <FileText size={48} className="mx-auto mb-4 text-[var(--color-text-tertiary)]" />
+                        <FileText
+                            size={48}
+                            className="mx-auto mb-4 text-[var(--color-text-tertiary)]"
+                        />
                         <p className="text-[var(--color-text-secondary)]">
                             No evidence found. Upload a forensic export to get started.
                         </p>
@@ -403,7 +443,7 @@ function CaseDetail() {
                             variant="ghost"
                             size="sm"
                             disabled={pagination.page === 1}
-                            onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
+                            onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
                         >
                             Previous
                         </Button>
@@ -414,7 +454,7 @@ function CaseDetail() {
                             variant="ghost"
                             size="sm"
                             disabled={pagination.page === pagination.pages}
-                            onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}
+                            onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                         >
                             Next
                         </Button>
@@ -443,18 +483,14 @@ function CaseDetail() {
                 <div className="p-6">
                     <FileUpload onUpload={handleUpload} />
                     <p className="text-sm text-[var(--color-text-secondary)] mt-4">
-                        Supports forensic exports (CSV/Excel), screenshots (OCR), and voice notes (Transcription).
+                        Supports forensic exports (CSV/Excel), screenshots (OCR), and voice notes
+                        (Transcription).
                     </p>
                 </div>
             </Modal>
 
             {/* Edit Case Modal */}
-            <Modal
-                isOpen={showEdit}
-                onClose={() => setShowEdit(false)}
-                title="Edit Case"
-                size="lg"
-            >
+            <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title="Edit Case" size="lg">
                 <CaseForm
                     initialData={caseData}
                     onSubmit={handleUpdateCase}

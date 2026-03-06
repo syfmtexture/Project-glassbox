@@ -79,7 +79,9 @@ function EvidenceCard({ evidence, onClick, onBookmark, selected = false }) {
             case 'location':
                 return (
                     <div className="text-sm text-[var(--color-text-primary)]">
-                        📍 {locationName || `${evidence.latitude?.toFixed(4)}, ${evidence.longitude?.toFixed(4)}`}
+                        📍{' '}
+                        {locationName ||
+                            `${evidence.latitude?.toFixed(4)}, ${evidence.longitude?.toFixed(4)}`}
                     </div>
                 )
 
@@ -147,9 +149,7 @@ function EvidenceCard({ evidence, onClick, onBookmark, selected = false }) {
             </div>
 
             {/* Content */}
-            <div className="mb-3">
-                {getTypeContent()}
-            </div>
+            <div className="mb-3">{getTypeContent()}</div>
 
             {/* Flags */}
             {flags.length > 0 && (

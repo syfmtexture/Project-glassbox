@@ -43,11 +43,17 @@ function Contacts() {
     }, [id, toast])
 
     // Find max for bar scaling - use totalMessages from backend
-    const maxMessages = Math.max(...contacts.map(c => c.totalMessages || c.messageCount || c.count || 0), 1)
+    const maxMessages = Math.max(
+        ...contacts.map((c) => c.totalMessages || c.messageCount || c.count || 0),
+        1
+    )
 
     // Stat cards
     const totalContacts = contacts.length
-    const totalMessages = contacts.reduce((sum, c) => sum + (c.totalMessages || c.messageCount || c.count || 0), 0)
+    const totalMessages = contacts.reduce(
+        (sum, c) => sum + (c.totalMessages || c.messageCount || c.count || 0),
+        0
+    )
 
     if (loading) {
         return (
@@ -113,7 +119,10 @@ function Contacts() {
 
                 {contacts.length === 0 ? (
                     <div className="text-center py-12">
-                        <Users size={48} className="mx-auto mb-4 text-[var(--color-text-tertiary)]" />
+                        <Users
+                            size={48}
+                            className="mx-auto mb-4 text-[var(--color-text-tertiary)]"
+                        />
                         <p className="text-[var(--color-text-secondary)]">
                             No contact data available. Upload evidence to see contact patterns.
                         </p>
@@ -121,9 +130,11 @@ function Contacts() {
                 ) : (
                     <div className="space-y-3">
                         {contacts.map((contact, index) => {
-                            const messageCount = contact.totalMessages || contact.messageCount || contact.count || 0
+                            const messageCount =
+                                contact.totalMessages || contact.messageCount || contact.count || 0
                             const barWidth = (messageCount / maxMessages) * 100
-                            const displayName = contact.name || contact.contactName || contact.contact || 'Unknown'
+                            const displayName =
+                                contact.name || contact.contactName || contact.contact || 'Unknown'
 
                             return (
                                 <motion.div

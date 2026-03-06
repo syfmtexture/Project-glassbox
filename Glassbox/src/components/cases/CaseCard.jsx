@@ -40,7 +40,10 @@ function CaseCard({ caseData }) {
                     <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--color-accent-primary)]/10 to-[var(--color-accent-purple)]/10 flex items-center justify-center border border-[var(--color-accent-primary)]/20 shadow-inner group-hover:scale-105 transition-transform duration-300">
-                                <Smartphone size={24} className="text-[var(--color-accent-primary)]" />
+                                <Smartphone
+                                    size={24}
+                                    className="text-[var(--color-accent-primary)]"
+                                />
                             </div>
                             <div>
                                 <h3 className="text-lg font-bold text-[var(--color-text-primary)] m-0 group-hover:text-[var(--color-accent-primary)] transition-colors tracking-tight">
@@ -73,9 +76,7 @@ function CaseCard({ caseData }) {
                     {/* Footer */}
                     <div className="flex items-center justify-between pt-4 border-t border-[var(--color-border-subtle)]">
                         <div className="flex items-center gap-2 text-xs font-medium text-[var(--color-text-tertiary)] uppercase tracking-wider">
-                            {investigator && (
-                                <span>{investigator}</span>
-                            )}
+                            {investigator && <span>{investigator}</span>}
                             {deviceInfo?.deviceType && (
                                 <>
                                     <span className="text-[var(--color-border-glass)]">•</span>

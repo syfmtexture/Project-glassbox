@@ -15,7 +15,7 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
 
     const handleChange = (e) => {
         const { name, value } = e.target
-        setFormData(prev => ({ ...prev, [name]: value }))
+        setFormData((prev) => ({ ...prev, [name]: value }))
     }
 
     const handleSubmit = (e) => {
@@ -26,11 +26,14 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
             caseNumber: formData.caseNumber || undefined,
             investigator: formData.investigator || undefined,
             description: formData.description || undefined,
-            deviceInfo: (formData.deviceType || formData.imei || formData.owner) ? {
-                deviceType: formData.deviceType || undefined,
-                imei: formData.imei || undefined,
-                owner: formData.owner || undefined,
-            } : undefined,
+            deviceInfo:
+                formData.deviceType || formData.imei || formData.owner
+                    ? {
+                          deviceType: formData.deviceType || undefined,
+                          imei: formData.imei || undefined,
+                          owner: formData.owner || undefined,
+                      }
+                    : undefined,
         }
 
         onSubmit(submitData)
@@ -41,7 +44,10 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
             <div className="p-6 space-y-4">
                 {/* Case Name */}
                 <div>
-                    <label htmlFor="caseName" className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+                    <label
+                        htmlFor="caseName"
+                        className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
+                    >
                         Case Name <span className="text-[var(--color-accent-critical)]">*</span>
                     </label>
                     <input
@@ -59,7 +65,10 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
                 {/* Case Number & Investigator */}
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="caseNumber" className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+                        <label
+                            htmlFor="caseNumber"
+                            className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
+                        >
                             Case Number
                         </label>
                         <input
@@ -73,7 +82,10 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
                         />
                     </div>
                     <div>
-                        <label htmlFor="investigator" className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+                        <label
+                            htmlFor="investigator"
+                            className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
+                        >
                             Investigator
                         </label>
                         <input
@@ -90,7 +102,10 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
 
                 {/* Description */}
                 <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+                    <label
+                        htmlFor="description"
+                        className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
+                    >
                         Description
                     </label>
                     <textarea
@@ -110,7 +125,10 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
                     </h4>
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label htmlFor="deviceType" className="block text-xs text-[var(--color-text-secondary)] mb-1">
+                            <label
+                                htmlFor="deviceType"
+                                className="block text-xs text-[var(--color-text-secondary)] mb-1"
+                            >
                                 Device Type
                             </label>
                             <input
@@ -124,7 +142,10 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
                             />
                         </div>
                         <div>
-                            <label htmlFor="imei" className="block text-xs text-[var(--color-text-secondary)] mb-1">
+                            <label
+                                htmlFor="imei"
+                                className="block text-xs text-[var(--color-text-secondary)] mb-1"
+                            >
                                 IMEI
                             </label>
                             <input
@@ -138,7 +159,10 @@ function CaseForm({ onSubmit, onCancel, initialData = {}, loading = false }) {
                             />
                         </div>
                         <div>
-                            <label htmlFor="owner" className="block text-xs text-[var(--color-text-secondary)] mb-1">
+                            <label
+                                htmlFor="owner"
+                                className="block text-xs text-[var(--color-text-secondary)] mb-1"
+                            >
                                 Owner
                             </label>
                             <input

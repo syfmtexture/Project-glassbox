@@ -9,7 +9,10 @@ function Header({ darkMode, setDarkMode }) {
         <header className="glass-card-static sticky top-4 z-50 mx-auto mt-4 px-6 py-4 max-w-[1400px] w-[calc(100%-48px)] rounded-2xl shadow-lg border border-[var(--color-border-glass)] backdrop-blur-xl">
             <div className="flex items-center justify-between">
                 {/* Logo */}
-                <Link to="/" className="flex items-center gap-3 no-underline transition-transform hover:scale-105">
+                <Link
+                    to="/"
+                    className="flex items-center gap-3 no-underline transition-transform hover:scale-105"
+                >
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-accent-primary)] to-[var(--color-accent-purple)] flex items-center justify-center shadow-lg shadow-[var(--color-accent-primary)]/20">
                         <span className="text-xl text-white">🥂</span>
                     </div>
@@ -26,7 +29,9 @@ function Header({ darkMode, setDarkMode }) {
                 {/* Right Actions */}
                 <div className="flex items-center gap-2">
                     {/* Search (expandable) */}
-                    <div className={`relative transition-all duration-300 ${searchOpen ? 'w-64' : 'w-10'}`}>
+                    <div
+                        className={`relative transition-all duration-300 ${searchOpen ? 'w-64' : 'w-10'}`}
+                    >
                         {searchOpen ? (
                             <input
                                 type="text"

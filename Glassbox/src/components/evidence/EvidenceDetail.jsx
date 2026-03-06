@@ -37,7 +37,7 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
     const handleToggleBookmark = async () => {
         try {
             await evidenceApi.toggleBookmark(caseId, evidenceId)
-            setEvidence(prev => ({ ...prev, isBookmarked: !prev.isBookmarked }))
+            setEvidence((prev) => ({ ...prev, isBookmarked: !prev.isBookmarked }))
             onUpdate?.()
         } catch {
             toast.error('Failed to update bookmark')
@@ -47,7 +47,7 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
     const handleMarkReviewed = async () => {
         try {
             await evidenceApi.update(caseId, evidenceId, { isReviewed: true })
-            setEvidence(prev => ({ ...prev, isReviewed: true }))
+            setEvidence((prev) => ({ ...prev, isReviewed: true }))
             onUpdate?.()
             toast.success('Marked as reviewed')
         } catch {
@@ -76,7 +76,7 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
 
         try {
             await evidenceApi.update(caseId, evidenceId, { tags: updatedTags })
-            setEvidence(prev => ({ ...prev, tags: updatedTags }))
+            setEvidence((prev) => ({ ...prev, tags: updatedTags }))
             setNewTag('')
             onUpdate?.()
         } catch {
@@ -85,11 +85,11 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
     }
 
     const handleRemoveTag = async (tagToRemove) => {
-        const updatedTags = (evidence.tags || []).filter(t => t !== tagToRemove)
+        const updatedTags = (evidence.tags || []).filter((t) => t !== tagToRemove)
 
         try {
             await evidenceApi.update(caseId, evidenceId, { tags: updatedTags })
-            setEvidence(prev => ({ ...prev, tags: updatedTags }))
+            setEvidence((prev) => ({ ...prev, tags: updatedTags }))
             onUpdate?.()
         } catch {
             toast.error('Failed to remove tag')
@@ -149,20 +149,22 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
                     <div className="flex items-center gap-2">
                         <PriorityBadge priority={priority} />
                         <TypeBadge type={type} />
-                        {sentiment && (
-                            <span className="badge badge-info">{sentiment}</span>
-                        )}
+                        {sentiment && <span className="badge badge-info">{sentiment}</span>}
                     </div>
 
                     {/* Metadata */}
                     <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                             <span className="text-[var(--color-text-secondary)]">Timestamp</span>
-                            <p className="text-[var(--color-text-primary)] m-0">{formatDateTime(timestamp)}</p>
+                            <p className="text-[var(--color-text-primary)] m-0">
+                                {formatDateTime(timestamp)}
+                            </p>
                         </div>
                         <div>
                             <span className="text-[var(--color-text-secondary)]">Source</span>
-                            <p className="text-[var(--color-text-primary)] m-0">{source || 'Unknown'}</p>
+                            <p className="text-[var(--color-text-primary)] m-0">
+                                {source || 'Unknown'}
+                            </p>
                         </div>
                         {sender && (
                             <div>
@@ -181,7 +183,9 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
                     {/* Content */}
                     {content && (
                         <div>
-                            <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">Content</h4>
+                            <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+                                Content
+                            </h4>
                             <div className="glass-card-static p-4">
                                 <p className="text-sm text-[var(--color-text-primary)] m-0 whitespace-pre-wrap">
                                     {content}
@@ -192,23 +196,35 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
 
                     {/* AI Analysis */}
                     <div>
-                        <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">AI Analysis</h4>
+                        <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+                            AI Analysis
+                        </h4>
                         <div className="glass-card-static p-4 space-y-3">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-[var(--color-text-secondary)]">Priority Score</span>
-                                <span className="text-lg font-semibold text-[var(--color-text-primary)]">{priorityScore}/100</span>
+                                <span className="text-sm text-[var(--color-text-secondary)]">
+                                    Priority Score
+                                </span>
+                                <span className="text-lg font-semibold text-[var(--color-text-primary)]">
+                                    {priorityScore}/100
+                                </span>
                             </div>
 
                             {summary && (
                                 <div>
-                                    <span className="text-xs text-[var(--color-text-tertiary)]">Summary</span>
-                                    <p className="text-sm text-[var(--color-text-primary)] m-0">{summary}</p>
+                                    <span className="text-xs text-[var(--color-text-tertiary)]">
+                                        Summary
+                                    </span>
+                                    <p className="text-sm text-[var(--color-text-primary)] m-0">
+                                        {summary}
+                                    </p>
                                 </div>
                             )}
 
                             {flags.length > 0 && (
                                 <div>
-                                    <span className="text-xs text-[var(--color-text-tertiary)]">Flags</span>
+                                    <span className="text-xs text-[var(--color-text-tertiary)]">
+                                        Flags
+                                    </span>
                                     <div className="flex flex-wrap gap-1.5 mt-1">
                                         {flags.map((flag, i) => (
                                             <span
@@ -226,7 +242,9 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
 
                     {/* Tags */}
                     <div>
-                        <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">Tags</h4>
+                        <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+                            Tags
+                        </h4>
                         <div className="flex flex-wrap gap-2 mb-2">
                             {(evidence.tags || []).map((tag, i) => (
                                 <span
@@ -260,7 +278,9 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
 
                     {/* Notes */}
                     <div>
-                        <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">Notes</h4>
+                        <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+                            Notes
+                        </h4>
                         <textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
@@ -285,7 +305,13 @@ function EvidenceDetail({ caseId, evidenceId, onClose, onUpdate }) {
                     <Button
                         variant={evidence.isBookmarked ? 'primary' : 'secondary'}
                         onClick={handleToggleBookmark}
-                        icon={evidence.isBookmarked ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                        icon={
+                            evidence.isBookmarked ? (
+                                <BookmarkCheck size={16} />
+                            ) : (
+                                <Bookmark size={16} />
+                            )
+                        }
                     >
                         {evidence.isBookmarked ? 'Bookmarked' : 'Bookmark'}
                     </Button>

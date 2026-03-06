@@ -81,12 +81,14 @@ export function StatusBadge({ status }) {
 
     return (
         <span className={clsx('badge', statusStyles[status] || statusStyles.active)}>
-            <span className={clsx(
-                'w-1.5 h-1.5 rounded-full',
-                status === 'active' && 'bg-green-500 animate-pulse',
-                status === 'archived' && 'bg-yellow-500',
-                status === 'closed' && 'bg-gray-500',
-            )} />
+            <span
+                className={clsx(
+                    'w-1.5 h-1.5 rounded-full',
+                    status === 'active' && 'bg-green-500 animate-pulse',
+                    status === 'archived' && 'bg-yellow-500',
+                    status === 'closed' && 'bg-gray-500'
+                )}
+            />
             {labels[status] || status}
         </span>
     )

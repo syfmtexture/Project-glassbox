@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ===== LIQUID GLASS DESIGN SYSTEM ===== */
 
@@ -42,16 +42,16 @@
     --color-priority-low: #10b981;
 
     /* Advanced Shadows */
-    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+    --shadow-glass:
+        0 8px 32px 0 rgba(31, 38, 135, 0.07), inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
         inset 1px 0 0 0 rgba(255, 255, 255, 0.3);
 
-    --shadow-glass-hover: 0 12px 48px 0 rgba(31, 38, 135, 0.12),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    --shadow-glass-hover:
+        0 12px 48px 0 rgba(31, 38, 135, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
         inset 1px 0 0 0 rgba(255, 255, 255, 0.4);
 
-    --shadow-glass-pressed: 0 2px 12px 0 rgba(31, 38, 135, 0.05),
-        inset 0 1px 4px 0 rgba(0, 0, 0, 0.05);
+    --shadow-glass-pressed:
+        0 2px 12px 0 rgba(31, 38, 135, 0.05), inset 0 1px 4px 0 rgba(0, 0, 0, 0.05);
 
     --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.04);
 
@@ -77,19 +77,12 @@
     --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     /* Fonts - Switched to Outfit + JetBrains Mono */
-    --font-sans: 'Outfit',
-        system-ui,
-        -apple-system,
-        sans-serif;
-    --font-mono: 'JetBrains Mono',
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        monospace;
+    --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* ===== DARK MODE (Midnight Glass) ===== */
-[data-theme="dark"] {
+[data-theme='dark'] {
     --color-bg-primary: #020617;
     /* Very deep slate/blue black */
     --color-bg-secondary: #0f172a;
@@ -105,13 +98,11 @@
     --color-text-tertiary: #64748b;
 
     --shadow-glass:
-        0 8px 32px 0 rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+        0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
         inset 1px 0 0 0 rgba(255, 255, 255, 0.05);
 
     --shadow-glass-hover:
-        0 12px 48px 0 rgba(0, 0, 0, 0.6),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+        0 12px 48px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
         inset 1px 0 0 0 rgba(255, 255, 255, 0.08);
 }
 
@@ -134,7 +125,9 @@ body {
     background-color: var(--color-bg-primary);
     position: relative;
     overflow-x: hidden;
-    transition: background-color var(--transition-slow), color var(--transition-slow);
+    transition:
+        background-color var(--transition-slow),
+        color var(--transition-slow);
 }
 
 /* The Animated Orbs for the liquid glass feel */
@@ -165,8 +158,8 @@ body::after {
     animation-delay: -10s;
 }
 
-[data-theme="dark"] body::before,
-[data-theme="dark"] body::after {
+[data-theme='dark'] body::before,
+[data-theme='dark'] body::after {
     opacity: 0.25;
     /* Dark mode glow is more subtle */
     filter: blur(150px);
@@ -195,7 +188,7 @@ body::after {
 }
 
 .app::before {
-    content: "";
+    content: '';
     position: fixed;
     top: 0;
     left: 0;
@@ -249,7 +242,7 @@ body::after {
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 
-[data-theme="dark"] .glass-card::before {
+[data-theme='dark'] .glass-card::before {
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
@@ -259,7 +252,7 @@ body::after {
     border-color: rgba(255, 255, 255, 0.8);
 }
 
-[data-theme="dark"] .glass-card:hover {
+[data-theme='dark'] .glass-card:hover {
     border-color: rgba(255, 255, 255, 0.2);
 }
 
@@ -303,7 +296,9 @@ body::after {
 
 .btn-primary:hover {
     background: var(--color-accent-primary-hover);
-    box-shadow: var(--glow-primary), 0 6px 20px rgba(37, 99, 235, 0.4);
+    box-shadow:
+        var(--glow-primary),
+        0 6px 20px rgba(37, 99, 235, 0.4);
     transform: translateY(-2px);
 }
 
@@ -321,7 +316,7 @@ body::after {
     transform: translateY(-2px);
 }
 
-[data-theme="dark"] .btn-secondary:hover {
+[data-theme='dark'] .btn-secondary:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: var(--color-border-glass);
 }
@@ -407,7 +402,9 @@ body::after {
     outline: none;
     border-color: var(--color-accent-primary);
     background: var(--color-bg-secondary);
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    box-shadow:
+        0 0 0 4px rgba(37, 99, 235, 0.15),
+        inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .input::placeholder {
@@ -426,7 +423,7 @@ body::after {
     border: 1px solid var(--color-border-glass);
 }
 
-[data-theme="dark"] .tabs {
+[data-theme='dark'] .tabs {
     background: rgba(255, 255, 255, 0.03);
 }
 
@@ -520,10 +517,12 @@ body::after {
 
 /* ===== SKELETON LOADING ===== */
 .skeleton {
-    background: linear-gradient(90deg,
-            var(--color-border-subtle) 25%,
-            rgba(255, 255, 255, 0.1) 50%,
-            var(--color-border-subtle) 75%);
+    background: linear-gradient(
+        90deg,
+        var(--color-border-subtle) 25%,
+        rgba(255, 255, 255, 0.1) 50%,
+        var(--color-border-subtle) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 2s infinite linear;
     border-radius: var(--radius-md);

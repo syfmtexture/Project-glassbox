@@ -54,19 +54,14 @@ function Modal({ isOpen, onClose, title, children, size = 'md' }) {
                                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
                                     {title}
                                 </h2>
-                                <button
-                                    onClick={onClose}
-                                    className="btn-ghost btn-icon p-2 -mr-2"
-                                >
+                                <button onClick={onClose} className="btn-ghost btn-icon p-2 -mr-2">
                                     <X size={18} />
                                 </button>
                             </div>
                         )}
 
                         {/* Content */}
-                        <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-                            {children}
-                        </div>
+                        <div className="overflow-y-auto max-h-[calc(90vh-80px)]">{children}</div>
                     </motion.div>
                 </div>
             )}

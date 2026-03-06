@@ -72,10 +72,10 @@ function Timeline() {
         }
 
         // Process the actual hourly data from backend
-        return hourlyData.map(item => ({
+        return hourlyData.map((item) => ({
             label: `${item.hour}:00`,
             hour: item.hour,
-            messages: item.count || 0,  // Backend just has count, not broken by type
+            messages: item.count || 0, // Backend just has count, not broken by type
             calls: 0,
             locations: 0,
             total: item.count || 0,
@@ -83,11 +83,10 @@ function Timeline() {
     }
 
     // Find peak activity
-    const peakData = timelineData.reduce((max, item) =>
-        item.total > (max?.total || 0) ? item : max
-        , null)
-
-
+    const peakData = timelineData.reduce(
+        (max, item) => (item.total > (max?.total || 0) ? item : max),
+        null
+    )
 
     if (loading) {
         return (
@@ -122,14 +121,18 @@ function Timeline() {
                         <input
                             type="date"
                             value={dateRange.startDate}
-                            onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                            onChange={(e) =>
+                                setDateRange((prev) => ({ ...prev, startDate: e.target.value }))
+                            }
                             className="input w-auto"
                         />
                         <span className="text-[var(--color-text-secondary)]">to</span>
                         <input
                             type="date"
                             value={dateRange.endDate}
-                            onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                            onChange={(e) =>
+                                setDateRange((prev) => ({ ...prev, endDate: e.target.value }))
+                            }
                             className="input w-auto"
                         />
                     </div>
@@ -150,7 +153,10 @@ function Timeline() {
 
                 <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={timelineData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                        <BarChart
+                            data={timelineData}
+                            margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
+                        >
                             <XAxis
                                 dataKey="label"
                                 tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
@@ -171,11 +177,29 @@ function Timeline() {
                                 }}
                                 labelStyle={{ color: 'var(--color-text-primary)', fontWeight: 600 }}
                                 itemStyle={{ color: 'var(--color-text-secondary)' }}
-                                formatter={(value, name) => [value, name.charAt(0).toUpperCase() + name.slice(1)]}
+                                formatter={(value, name) => [
+                                    value,
+                                    name.charAt(0).toUpperCase() + name.slice(1),
+                                ]}
                             />
-                            <Bar dataKey="messages" stackId="a" fill="var(--color-accent-primary)" radius={[0, 0, 0, 0]} />
-                            <Bar dataKey="calls" stackId="a" fill="var(--color-accent-purple)" radius={[0, 0, 0, 0]} />
-                            <Bar dataKey="locations" stackId="a" fill="var(--color-accent-success)" radius={[4, 4, 0, 0]} />
+                            <Bar
+                                dataKey="messages"
+                                stackId="a"
+                                fill="var(--color-accent-primary)"
+                                radius={[0, 0, 0, 0]}
+                            />
+                            <Bar
+                                dataKey="calls"
+                                stackId="a"
+                                fill="var(--color-accent-purple)"
+                                radius={[0, 0, 0, 0]}
+                            />
+                            <Bar
+                                dataKey="locations"
+                                stackId="a"
+                                fill="var(--color-accent-success)"
+                                radius={[4, 4, 0, 0]}
+                            />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
@@ -192,7 +216,9 @@ function Timeline() {
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-sm bg-[var(--color-accent-success)]" />
-                        <span className="text-sm text-[var(--color-text-secondary)]">Locations</span>
+                        <span className="text-sm text-[var(--color-text-secondary)]">
+                            Locations
+                        </span>
                     </div>
                 </div>
             </GlassCard>

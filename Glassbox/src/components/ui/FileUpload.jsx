@@ -3,7 +3,11 @@ import { Upload, File, X, CheckCircle } from 'lucide-react'
 import { clsx } from 'clsx'
 import Button from './Button'
 
-function FileUpload({ onUpload, accept = '.csv,.xlsx,.xls,.png,.jpg,.jpeg,.webp,.mp3,.ogg,.wav,.m4a,.opus', disabled = false }) {
+function FileUpload({
+    onUpload,
+    accept = '.csv,.xlsx,.xls,.png,.jpg,.jpeg,.webp,.mp3,.ogg,.wav,.m4a,.opus',
+    disabled = false,
+}) {
     const [dragActive, setDragActive] = useState(false)
     const [file, setFile] = useState(null)
     const [uploading, setUploading] = useState(false)
@@ -90,10 +94,16 @@ function FileUpload({ onUpload, accept = '.csv,.xlsx,.xls,.png,.jpg,.jpeg,.webp,
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                     />
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-border-subtle)] flex items-center justify-center group-hover:scale-110 transition-transform duration-300 group-hover:bg-[var(--color-accent-primary)]/10">
-                        <Upload className="text-[var(--color-text-secondary)] group-hover:text-[var(--color-accent-primary)] transition-colors duration-300" size={32} />
+                        <Upload
+                            className="text-[var(--color-text-secondary)] group-hover:text-[var(--color-accent-primary)] transition-colors duration-300"
+                            size={32}
+                        />
                     </div>
                     <p className="text-base font-semibold text-[var(--color-text-primary)] mb-2">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-cyan)] font-bold tracking-wide">Select files</span> to upload or drag & drop here
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-cyan)] font-bold tracking-wide">
+                            Select files
+                        </span>{' '}
+                        to upload or drag & drop here
                     </p>
                     <p className="text-sm font-medium text-[var(--color-text-tertiary)] tracking-wide">
                         CSV, XLSX, Images (OCR), or Audio (Transcription) (max 100MB)
@@ -126,11 +136,11 @@ function FileUpload({ onUpload, accept = '.csv,.xlsx,.xls,.png,.jpg,.jpeg,.webp,
                             </button>
                         </>
                     )}
-                    {uploading && (
-                        <span className="spinner" />
-                    )}
+                    {uploading && <span className="spinner" />}
                     {uploadComplete && (
-                        <span className="text-sm text-[var(--color-accent-success)]">Uploaded!</span>
+                        <span className="text-sm text-[var(--color-accent-success)]">
+                            Uploaded!
+                        </span>
                     )}
                 </div>
             )}

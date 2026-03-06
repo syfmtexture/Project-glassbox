@@ -24,15 +24,15 @@ export function ToastProvider({ children }) {
 
     const addToast = useCallback((message, type = 'info') => {
         const id = Math.random().toString(36).substring(2, 9) + Date.now().toString(36)
-        setToasts(prev => [...prev, { id, message, type }])
+        setToasts((prev) => [...prev, { id, message, type }])
 
         setTimeout(() => {
-            setToasts(prev => prev.filter(t => t.id !== id))
+            setToasts((prev) => prev.filter((t) => t.id !== id))
         }, TOAST_DURATION)
     }, [])
 
     const removeToast = useCallback((id) => {
-        setToasts(prev => prev.filter(t => t.id !== id))
+        setToasts((prev) => prev.filter((t) => t.id !== id))
     }, [])
 
     const toast = {
@@ -53,7 +53,7 @@ export function ToastProvider({ children }) {
 function ToastContainer({ toasts, removeToast }) {
     return (
         <div className="fixed bottom-6 right-6 z-[200] flex flex-col gap-3">
-            {toasts.map(toast => (
+            {toasts.map((toast) => (
                 <Toast key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
             ))}
         </div>
