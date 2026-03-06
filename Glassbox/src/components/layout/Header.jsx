@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Menu, Moon, Sun, Search } from 'lucide-react'
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 
 function Header({ darkMode, setDarkMode }) {
     const [searchOpen, setSearchOpen] = useState(false)
@@ -11,19 +12,61 @@ function Header({ darkMode, setDarkMode }) {
                 {/* Logo */}
                 <Link
                     to="/"
-                    className="flex items-center gap-3 no-underline transition-transform hover:scale-105"
+                    className="no-underline focus:outline-none"
                 >
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-accent-primary)] to-[var(--color-accent-purple)] flex items-center justify-center shadow-lg shadow-[var(--color-accent-primary)]/20">
-                        <span className="text-xl text-white">🥂</span>
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-text-secondary)] m-0 tracking-tight">
-                            GLASSBOX
-                        </h1>
-                        <p className="text-xs text-[var(--color-accent-primary)] m-0 tracking-widest uppercase font-semibold opacity-80">
-                            Forensic Triage
-                        </p>
-                    </div>
+                    <motion.div
+                        className="flex items-center gap-3"
+                        initial="hidden"
+                        animate="visible"
+                        whileHover="hover"
+                    >
+                        <motion.div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-[var(--color-accent-primary)]/20 overflow-hidden bg-white/5 backdrop-blur-md border border-[var(--color-border-glass)]"
+                            variants={{
+                                hidden: { scale: 0, rotate: -90, opacity: 0 },
+                                visible: {
+                                    scale: 1,
+                                    rotate: 0,
+                                    opacity: 1,
+                                    transition: { type: "spring", stiffness: 300, damping: 20 }
+                                },
+                                hover: {
+                                    scale: 1.15,
+                                    rotate: 15,
+                                    transition: { type: "spring", stiffness: 400, damping: 10 }
+                                }
+                            }}
+                        >
+                            <img src="/logo.png" alt="Glassbox Logo" className="w-8 h-8 object-contain" />
+                        </motion.div>
+
+                        <motion.div
+                            variants={{
+                                hidden: { opacity: 0, x: -20 },
+                                visible: {
+                                    opacity: 1,
+                                    x: 0,
+                                    transition: { delay: 0.15, duration: 0.5, ease: "easeOut" }
+                                },
+                                hover: {
+                                    x: 5,
+                                    transition: { type: "spring", stiffness: 400, damping: 10 }
+                                }
+                            }}
+                        >
+                            <motion.h1
+                                className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-text-secondary)] m-0 tracking-tight"
+                                variants={{
+                                    hover: { scale: 1.05, originX: 0 }
+                                }}
+                            >
+                                GLASSBOX
+                            </motion.h1>
+                            <p className="text-xs text-[var(--color-accent-primary)] m-0 tracking-widest uppercase font-semibold opacity-80">
+                                Forensic Triage
+                            </p>
+                        </motion.div>
+                    </motion.div>
                 </Link>
 
                 {/* Right Actions */}
