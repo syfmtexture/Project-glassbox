@@ -35,10 +35,12 @@ const caseSchema = new Schema({
         default: 'active'
     },
     uploadedFiles: [{
+        fileId: String,  // GridFS file ID
         filename: String,
         originalName: String,
         mimetype: String,
         size: Number,
+        recordsImported: Number,
         uploadedAt: {
             type: Date,
             default: Date.now

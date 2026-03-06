@@ -156,12 +156,18 @@ async function analyzeEvidence(evidence, useLLM = true) {
         const llmResult = await analyzeWithLLM(evidence);
 
         if (llmResult) {
+            // Map LLM entity 'type' to 'entityType' for schema compatibility
+            const mappedEntities = (llmResult.entities || []).map(e => ({
+                entityType: e.type || e.entityType,
+                value: e.value
+            }));
+
             analysis = {
                 priorityScore: llmResult.priorityScore || 0,
                 flags: [...new Set([...patternResult.categories, ...(llmResult.flags || [])])],
                 summary: llmResult.summary || '',
                 sentiment: llmResult.sentiment || 'neutral',
-                entities: llmResult.entities || [],
+                entities: mappedEntities,
                 analyzedAt: new Date()
             };
         } else if (patternResult.hasPatterns) {

@@ -63,7 +63,7 @@ const evidenceSchema = new Schema({
             enum: ['positive', 'neutral', 'negative', null]
         },
         entities: [{
-            type: String,
+            entityType: String,
             value: String
         }],
         analyzedAt: Date
