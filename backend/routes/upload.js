@@ -377,6 +377,8 @@ router.delete('/files/:fileId', async (req, res, next) => {
             });
         }
 
+        const fileInfo = caseDoc.uploadedFiles[fileIndex];
+
         // Delete from GridFS
         try {
             await deleteFromGridFS(req.params.fileId);
@@ -384,13 +386,24 @@ router.delete('/files/:fileId', async (req, res, next) => {
             console.error('Failed to delete file from GridFS:', e);
         }
 
-        // Remove from case document
+        // Delete all evidence records imported from this file
+        const deleteResult = await Evidence.deleteMany({
+            caseId: req.params.caseId,
+            source: fileInfo.originalName
+        });
+        console.log(`Deleted ${deleteResult.deletedCount} evidence records from file "${fileInfo.originalName}"`);
+
+        // Remove from case document and update evidence count
         caseDoc.uploadedFiles.splice(fileIndex, 1);
+        caseDoc.evidenceCount = await Evidence.countDocuments({ caseId: req.params.caseId });
         await caseDoc.save();
 
         res.json({
             success: true,
-            message: 'File removed'
+            message: 'File and associated evidence removed',
+            data: {
+                deletedEvidence: deleteResult.deletedCount
+            }
         });
     } catch (error) {
         next(error);
