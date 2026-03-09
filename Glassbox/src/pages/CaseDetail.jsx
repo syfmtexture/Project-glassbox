@@ -483,7 +483,7 @@ function CaseDetail() {
                 <div className="p-6">
                     <FileUpload onUpload={handleUpload} />
                     <p className="text-sm text-[var(--color-text-secondary)] mt-4">
-                        Supports forensic exports (CSV/Excel), screenshots (OCR), and voice notes
+                        Supports any CSV/TSV/TXT (auto-detects delimiters), Excel, screenshots (OCR), and voice notes
                         (Transcription).
                     </p>
                 </div>

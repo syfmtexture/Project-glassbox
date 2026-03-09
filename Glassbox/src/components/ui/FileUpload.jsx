@@ -5,7 +5,7 @@ import Button from './Button'
 
 function FileUpload({
     onUpload,
-    accept = '.csv,.xlsx,.xls,.png,.jpg,.jpeg,.webp,.mp3,.ogg,.wav,.m4a,.opus',
+    accept = '.csv,.tsv,.txt,.xlsx,.xls,.png,.jpg,.jpeg,.webp,.mp3,.ogg,.wav,.m4a,.opus',
     disabled = false,
 }) {
     const [dragActive, setDragActive] = useState(false)
@@ -106,7 +106,7 @@ function FileUpload({
                         to upload or drag & drop here
                     </p>
                     <p className="text-sm font-medium text-[var(--color-text-tertiary)] tracking-wide">
-                        CSV, XLSX, Images (OCR), or Audio (Transcription) (max 100MB)
+                        CSV, TSV, TXT, XLSX, Images (OCR), or Audio (Transcription) — any delimiter (max 100MB)
                     </p>
                 </div>
             ) : (
