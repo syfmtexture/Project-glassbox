@@ -54,7 +54,12 @@ router.get('/', async (req, res, next) => {
         }
 
         if (search) {
-            query.$text = { $search: search };
+            const searchRegex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+            query.$or = [
+                { content: searchRegex },
+                { sender: searchRegex },
+                { receiver: searchRegex },
+            ];
         }
 
         // Build sort

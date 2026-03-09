@@ -247,7 +247,19 @@ router.get('/:id/stats', async (req, res, next) => {
  */
 router.get('/:id/timeline', async (req, res, next) => {
     try {
-        const timeline = await getTemporalDistribution(req.params.id);
+        const { startDate, endDate } = req.query;
+        // Optional: End Date should include the end of the day to make it inclusive
+        let adjustedEndDate = endDate;
+        if (endDate) {
+            const date = new Date(endDate);
+            date.setHours(23, 59, 59, 999);
+            adjustedEndDate = date.toISOString();
+        }
+
+        const timeline = await getTemporalDistribution(req.params.id, {
+            startDate,
+            endDate: adjustedEndDate
+        });
 
         res.json({
             success: true,
