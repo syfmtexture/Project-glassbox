@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Plus, Search, RefreshCw } from 'lucide-react'
 import { motion } from 'framer-motion'
 import GlassCard from '../components/ui/GlassCard'
@@ -10,9 +11,13 @@ import { casesApi } from '../services/api'
 import { useToast } from '../components/ui/Toast'
 
 function Dashboard() {
+    const location = useLocation()
     const [cases, setCases] = useState([])
     const [loading, setLoading] = useState(true)
-    const [search, setSearch] = useState('')
+    const [search, setSearch] = useState(() => {
+        const params = new URLSearchParams(location.search)
+        return params.get('search') || ''
+    })
     const [statusFilter, setStatusFilter] = useState('')
     const [showNewCase, setShowNewCase] = useState(false)
     const [creating, setCreating] = useState(false)
@@ -59,6 +64,14 @@ function Dashboard() {
             setLoading(false)
         }
     }, [search, statusFilter, toast])
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search)
+        const urlSearch = params.get('search')
+        if (urlSearch !== null && urlSearch !== search) {
+            setSearch(urlSearch)
+        }
+    }, [location.search])
 
     useEffect(() => {
         loadCases()

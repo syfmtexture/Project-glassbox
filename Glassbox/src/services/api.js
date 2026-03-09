@@ -31,7 +31,7 @@ export const casesApi = {
     update: (id, data) => apiClient.put(`/cases/${id}`, data),
     delete: (id) => apiClient.delete(`/cases/${id}`),
     getStats: (id) => apiClient.get(`/cases/${id}/stats`),
-    getTimeline: (id) => apiClient.get(`/cases/${id}/timeline`),
+    getTimeline: (id, params = {}) => apiClient.get(`/cases/${id}/timeline`, { params }),
     getContacts: (id, params = {}) => apiClient.get(`/cases/${id}/contacts`, { params }),
     analyze: (id, options = {}) => apiClient.post(`/cases/${id}/analyze`, options),
     getAnalysisStatus: (id) => apiClient.get(`/cases/${id}/analysis-status`),

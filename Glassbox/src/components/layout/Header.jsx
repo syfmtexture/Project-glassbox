@@ -1,10 +1,36 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Menu, Moon, Sun, Search } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 
 function Header({ darkMode, setDarkMode }) {
     const [searchOpen, setSearchOpen] = useState(false)
+    const [searchValue, setSearchValue] = useState('')
+    const navigate = useNavigate()
+    const location = useLocation()
+
+    // Sync search input with URL params if we are on the dashboard
+    useEffect(() => {
+        if (location.pathname === '/') {
+            const params = new URLSearchParams(location.search)
+            const searchParam = params.get('search')
+            setSearchValue(searchParam || '')
+            if (searchParam) setSearchOpen(true)
+        } else {
+            setSearchValue('')
+        }
+    }, [location])
+
+    const handleSearchSubmit = (e) => {
+        if (e.key === 'Enter') {
+            if (searchValue.trim()) {
+                navigate(`/?search=${encodeURIComponent(searchValue.trim())}`)
+            } else {
+                navigate('/')
+            }
+            e.target.blur()
+        }
+    }
 
     return (
         <header className="glass-card-static sticky top-4 z-50 mx-auto mt-4 px-6 py-4 max-w-[1400px] w-[calc(100%-48px)] rounded-2xl shadow-lg border border-[var(--color-border-glass)] backdrop-blur-xl">
@@ -13,6 +39,12 @@ function Header({ darkMode, setDarkMode }) {
                 <Link
                     to="/"
                     className="no-underline focus:outline-none"
+                    onClick={() => {
+                        setSearchValue('');
+                        if (location.pathname === '/') {
+                            navigate('/'); // clear exact dashboard searches
+                        }
+                    }}
                 >
                     <motion.div
                         className="flex items-center gap-3"
@@ -81,7 +113,10 @@ function Header({ darkMode, setDarkMode }) {
                                 placeholder="Search cases..."
                                 className="input pr-10"
                                 autoFocus
-                                onBlur={() => setSearchOpen(false)}
+                                value={searchValue}
+                                onChange={(e) => setSearchValue(e.target.value)}
+                                onKeyDown={handleSearchSubmit}
+                                onBlur={() => !searchValue && setSearchOpen(false)}
                             />
                         ) : null}
                         <button

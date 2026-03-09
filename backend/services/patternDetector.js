@@ -206,17 +206,39 @@ export async function detectTimelineGaps(caseId, options = {}) {
     };
 }
 
+import mongoose from 'mongoose';
+
 /**
  * Get temporal distribution (messages per day/hour)
  */
-export async function getTemporalDistribution(caseId) {
+export async function getTemporalDistribution(caseId, options = {}) {
+    // Cast caseId to ObjectId if it's a string (since Mongoose aggregate doesn't auto-cast)
+    const objectCaseId = typeof caseId === 'string' ? new mongoose.Types.ObjectId(caseId) : caseId;
+
+    // Build match query
+    const matchQuery = { caseId: objectCaseId, timestamp: { $exists: true } };
+
+    // Apply date range filters if provided
+    if (options.startDate || options.endDate) {
+        matchQuery.timestamp = {};
+        if (options.startDate) {
+            matchQuery.timestamp.$gte = new Date(options.startDate);
+        }
+        if (options.endDate) {
+            matchQuery.timestamp.$lte = new Date(options.endDate);
+        }
+    }
+
     // Daily distribution
     const dailyPipeline = [
-        { $match: { caseId, timestamp: { $exists: true } } },
+        { $match: matchQuery },
         {
             $group: {
                 _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
                 count: { $sum: 1 },
+                messages: { $sum: { $cond: [{ $eq: ['$type', 'message'] }, 1, 0] } },
+                calls: { $sum: { $cond: [{ $eq: ['$type', 'call'] }, 1, 0] } },
+                locations: { $sum: { $cond: [{ $eq: ['$type', 'location'] }, 1, 0] } },
                 types: { $addToSet: '$type' }
             }
         },
@@ -225,11 +247,14 @@ export async function getTemporalDistribution(caseId) {
 
     // Hourly distribution (aggregate by hour of day)
     const hourlyPipeline = [
-        { $match: { caseId, timestamp: { $exists: true } } },
+        { $match: matchQuery },
         {
             $group: {
                 _id: { $hour: '$timestamp' },
-                count: { $sum: 1 }
+                count: { $sum: 1 },
+                messages: { $sum: { $cond: [{ $eq: ['$type', 'message'] }, 1, 0] } },
+                calls: { $sum: { $cond: [{ $eq: ['$type', 'call'] }, 1, 0] } },
+                locations: { $sum: { $cond: [{ $eq: ['$type', 'location'] }, 1, 0] } }
             }
         },
         { $sort: { '_id': 1 } }
@@ -237,11 +262,14 @@ export async function getTemporalDistribution(caseId) {
 
     // Day of week distribution
     const weekdayPipeline = [
-        { $match: { caseId, timestamp: { $exists: true } } },
+        { $match: matchQuery },
         {
             $group: {
                 _id: { $dayOfWeek: '$timestamp' },
-                count: { $sum: 1 }
+                count: { $sum: 1 },
+                messages: { $sum: { $cond: [{ $eq: ['$type', 'message'] }, 1, 0] } },
+                calls: { $sum: { $cond: [{ $eq: ['$type', 'call'] }, 1, 0] } },
+                locations: { $sum: { $cond: [{ $eq: ['$type', 'location'] }, 1, 0] } }
             }
         },
         { $sort: { '_id': 1 } }
@@ -257,12 +285,27 @@ export async function getTemporalDistribution(caseId) {
     const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const weekdayData = weekday.map(w => ({
         day: weekdayNames[w._id - 1],
-        count: w.count
+        count: w.count,
+        messages: w.messages,
+        calls: w.calls,
+        locations: w.locations
     }));
 
     return {
-        daily: daily.map(d => ({ date: d._id, count: d.count })),
-        hourly: hourly.map(h => ({ hour: h._id, count: h.count })),
+        daily: daily.map(d => ({
+            date: d._id,
+            count: d.count,
+            messages: d.messages,
+            calls: d.calls,
+            locations: d.locations
+        })),
+        hourly: hourly.map(h => ({
+            hour: h._id,
+            count: h.count,
+            messages: h.messages,
+            calls: h.calls,
+            locations: h.locations
+        })),
         weekday: weekdayData
     };
 }

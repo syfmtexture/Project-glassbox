@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import {
     ArrowLeft,
     Upload,
@@ -17,6 +17,8 @@ import {
     MapPin,
     User,
     Smartphone,
+    Search,
+    X,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import GlassCard from '../components/ui/GlassCard'
@@ -35,6 +37,7 @@ import { useToast } from '../components/ui/Toast'
 function CaseDetail() {
     const { id } = useParams()
     const navigate = useNavigate()
+    const location = useLocation()
     const toast = useToast()
 
     // Case data
@@ -46,7 +49,17 @@ function CaseDetail() {
     const [evidence, setEvidence] = useState([])
     const [evidenceLoading, setEvidenceLoading] = useState(false)
     const [pagination, setPagination] = useState({ page: 1, total: 0, pages: 1 })
-    const [filters, setFilters] = useState({})
+
+    // Parse URL Search Params for Filters
+    const [filters, setFilters] = useState(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const initialFilters = {};
+        for (const [key, value] of searchParams.entries()) {
+            initialFilters[key] = value;
+        }
+        return initialFilters;
+    })
+
     const [sources, setSources] = useState([])
     const [tags, setTags] = useState([])
 
@@ -57,6 +70,8 @@ function CaseDetail() {
     const [showEdit, setShowEdit] = useState(false)
     const [analyzing, setAnalyzing] = useState(false)
     const [updating, setUpdating] = useState(false)
+    const [showSearchBar, setShowSearchBar] = useState(false)
+    const [searchText, setSearchText] = useState('')
 
     // Load case data
     const loadCase = useCallback(async () => {
@@ -353,7 +368,7 @@ function CaseDetail() {
             </div>
 
             {/* Actions Row */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
                 <Button icon={<Upload size={16} />} onClick={() => setShowUpload(true)}>
                     Upload File
                 </Button>
@@ -366,6 +381,19 @@ function CaseDetail() {
                 >
                     {analyzing ? 'Analyzing...' : 'Run Analysis'}
                 </Button>
+                <Button
+                    variant={showSearchBar ? 'secondary' : 'ghost'}
+                    icon={<Search size={16} />}
+                    onClick={() => {
+                        setShowSearchBar(!showSearchBar)
+                        if (showSearchBar) {
+                            setSearchText('')
+                            setFilters((prev) => { const { search, ...rest } = prev; return rest; })
+                        }
+                    }}
+                >
+                    Search Evidence
+                </Button>
                 <Link to={`/case/${id}/timeline`}>
                     <Button variant="ghost" icon={<BarChart2 size={16} />}>
                         Timeline
@@ -377,6 +405,44 @@ function CaseDetail() {
                     </Button>
                 </Link>
             </div>
+
+            {/* Quick Search Bar */}
+            {showSearchBar && (
+                <div className="glass-card-static p-3 flex items-center gap-3">
+                    <Search size={18} className="text-[var(--color-accent-primary)]" />
+                    <input
+                        type="text"
+                        autoFocus
+                        placeholder="Search evidence by text... (type and press Enter)"
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                setFilters((prev) => ({ ...prev, search: searchText }))
+                            }
+                        }}
+                        className="input flex-1"
+                    />
+                    {searchText && (
+                        <button
+                            className="btn-ghost btn-icon p-1.5"
+                            onClick={() => {
+                                setSearchText('')
+                                setFilters((prev) => { const { search, ...rest } = prev; return rest; })
+                            }}
+                        >
+                            <X size={16} />
+                        </button>
+                    )}
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setFilters((prev) => ({ ...prev, search: searchText }))}
+                    >
+                        Search
+                    </Button>
+                </div>
+            )}
 
             {/* Evidence Section */}
             <GlassCard hover={false} padding="lg">
