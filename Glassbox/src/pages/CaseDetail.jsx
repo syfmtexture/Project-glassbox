@@ -470,6 +470,7 @@ function CaseDetail() {
                         Search
                     </Button>
                 </div>
+            )}
             {/* Uploaded Files Section */}
             {caseData.uploadedFiles?.length > 0 && (
                 <GlassCard hover={false} className="relative overflow-hidden">
