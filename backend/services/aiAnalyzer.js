@@ -327,7 +327,7 @@ export async function getJobStatus(jobId) {
 }
 
 export default {
-    analyzeEvidence,
+    analyzeEvidenceBatch,
     runAnalysisJob,
     startAnalysis,
     getJobStatus,
