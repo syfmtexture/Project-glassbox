@@ -28,7 +28,7 @@ function getGridFSBucket() {
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['.csv', '.xlsx', '.xls', '.png', '.jpg', '.jpeg', '.webp', '.mp3', '.ogg', '.wav', '.m4a', '.opus'];
+    const allowedTypes = ['.csv', '.tsv', '.txt', '.xlsx', '.xls', '.png', '.jpg', '.jpeg', '.webp', '.mp3', '.ogg', '.wav', '.m4a', '.opus'];
     const ext = path.extname(file.originalname).toLowerCase();
 
     if (allowedTypes.includes(ext)) {
@@ -199,7 +199,7 @@ async function processUpload(jobId, caseId, caseDoc, file) {
         let parseResult;
         let isMedia = false;
 
-        if (ext === '.csv') {
+        if (['.csv', '.tsv', '.txt'].includes(ext)) {
             parseResult = await parseCSVFromBuffer(file.buffer, caseId, (count) => {
                 job.progress = count;
             });

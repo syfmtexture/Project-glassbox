@@ -62,14 +62,28 @@ function quickPatternScan(content) {
 }
 
 /**
- * Build analysis prompt for LLM
+ * Build batch analysis prompt for LLM
  */
-function buildAnalysisPrompt(evidence) {
-    return `You are a digital forensic analyst assistant. Analyze the following communication record and provide:
+function buildBatchAnalysisPrompt(evidenceBatch) {
+    const recordsText = evidenceBatch.map((ev, i) => `
+RECORD #${i + 1}
+ID: ${ev._id}
+Timestamp: ${ev.timestamp || 'Unknown'}
+Type: ${ev.type}
+Sender: ${ev.sender || 'Unknown'}
+Receiver: ${ev.receiver || 'Unknown'}
+Content: ${ev.content || 'No content'}
+Source App: ${ev.source || 'Unknown'}
+`).join('\n---\n');
+
+    return `You are a digital forensic analyst assistant. Analyze the following ${evidenceBatch.length} communication records and provide a structured analysis for each.
+
+Analysis requirements for each record:
 1. Priority score (0-100) based on investigative relevance
 2. Flags for suspicious content categories
 3. Brief summary (1-2 sentences)
 4. Sentiment classification
+5. Extracted entities
 
 Priority Scoring Guide:
 - 80-100 (Critical): Direct evidence of criminal activity
@@ -77,38 +91,34 @@ Priority Scoring Guide:
 - 40-59 (Medium): Potentially relevant context
 - 0-39 (Low): Likely irrelevant, casual conversation
 
-Detection Categories:
-- drug_reference: Drug-related content
-- violence_threat: Violence or threatening language
-- financial_crime: Money laundering, fraud indicators
-- conspiracy: Planning, secrecy indicators
-- evasion: Evidence destruction, anti-forensic mentions
-- key_entity: Important names, locations, organizations
+Detection Categories: drug_reference, violence_threat, financial_crime, conspiracy, evasion, key_entity.
 
-Communication Record:
-Timestamp: ${evidence.timestamp || 'Unknown'}
-Type: ${evidence.type}
-Sender: ${evidence.sender || 'Unknown'}
-Receiver: ${evidence.receiver || 'Unknown'}
-Content: ${evidence.content || 'No content'}
-Source App: ${evidence.source || 'Unknown'}
+Records to analyze:
+${recordsText}
 
-Respond ONLY with valid JSON in this exact format:
+Respond ONLY with a valid JSON object containing an array named "results" with exactly ${evidenceBatch.length} items in the same order as provided:
 {
-  "priorityScore": <number 0-100>,
-  "flags": [<array of category strings>],
-  "summary": "<brief summary>",
-  "sentiment": "<positive|neutral|negative>",
-  "entities": [{"type": "<person|location|organization|phone|email>", "value": "<entity value>"}]
+  "results": [
+    {
+      "id": "<record_id>",
+      "priorityScore": <number 0-100>,
+      "flags": [<array of strings>],
+      "summary": "<brief summary>",
+      "sentiment": "<positive|neutral|negative>",
+      "entities": [{"type": "<person|location|organization|phone|email>", "value": "<entity value>"}]
+    },
+    ...
+  ]
 }`;
 }
 
 /**
- * Analyze a single evidence record with Groq
+ * Call the Groq LLM for a batch of evidence records with automatic retry.
  */
-async function analyzeWithLLM(evidence) {
+async function analyzeBatchWithLLM(evidenceBatch, attempt = 1) {
+    const MAX_ATTEMPTS = 4;
     try {
-        const prompt = buildAnalysisPrompt(evidence);
+        const prompt = buildBatchAnalysisPrompt(evidenceBatch);
 
         const completion = await getGroqClient().chat.completions.create({
             messages: [
@@ -116,79 +126,91 @@ async function analyzeWithLLM(evidence) {
                     role: 'system',
                     content: 'You are a forensic analyst AI. Respond only with valid JSON, no markdown or extra text.'
                 },
-                {
-                    role: 'user',
-                    content: prompt
-                }
+                { role: 'user', content: prompt }
             ],
             model: 'llama-3.3-70b-versatile',
             temperature: 0.3,
-            max_tokens: 500,
+            max_tokens: 3000,
             response_format: { type: 'json_object' }
         });
 
-        const response = completion.choices[0]?.message?.content;
-        return JSON.parse(response);
+        const response = JSON.parse(completion.choices[0]?.message?.content);
+        return response.results || [];
     } catch (error) {
-        console.error('LLM analysis error:', error.message);
-        return null;
+        const status = error?.status || error?.response?.status;
+        if (status === 429 && attempt <= MAX_ATTEMPTS) {
+            let waitMs = Math.min(2000 * Math.pow(2, attempt - 1), 30000);
+            const match = error.message?.match(/try again in ([\d.]+)s/);
+            if (match) waitMs = Math.max(Math.ceil(parseFloat(match[1]) * 1000) + 200, waitMs);
+
+            console.warn(`Rate limited. Waiting ${waitMs}ms before retrying batch (attempt ${attempt}/${MAX_ATTEMPTS})...`);
+            await new Promise(r => setTimeout(r, waitMs));
+            return analyzeBatchWithLLM(evidenceBatch, attempt + 1);
+        }
+        console.error('Batch LLM analysis error:', error.message);
+        return [];
     }
 }
 
 /**
- * Analyze evidence with hybrid approach (pattern matching + LLM)
+ * Analyze evidence records (hybrid approach)
  */
-async function analyzeEvidence(evidence, useLLM = true) {
-    // Quick pattern scan first
-    const patternResult = quickPatternScan(evidence.content);
+async function analyzeEvidenceBatch(evidenceBatch, useLLM = true) {
+    // 1. Initial quick scan for all
+    const itemsToAnalyze = [];
+    const results = new Map();
 
-    let analysis = {
-        priorityScore: 0,
-        flags: patternResult.categories,
-        summary: '',
-        sentiment: 'neutral',
-        entities: [],
-        analyzedAt: new Date()
-    };
+    for (const ev of evidenceBatch) {
+        const patternResult = quickPatternScan(ev.content);
+        results.set(ev._id.toString(), {
+            priorityScore: patternResult.hasPatterns ? 40 : 0,
+            flags: patternResult.categories,
+            summary: patternResult.hasPatterns ? `Detected: ${patternResult.categories.join(', ')}` : '',
+            sentiment: 'neutral',
+            entities: [],
+            analyzedAt: new Date()
+        });
 
-    // If patterns detected or content is substantial, use LLM
-    if (useLLM && (patternResult.hasPatterns || (evidence.content && evidence.content.length > 20))) {
-        const llmResult = await analyzeWithLLM(evidence);
+        if (useLLM && (patternResult.hasPatterns || (ev.content && ev.content.length > 20))) {
+            itemsToAnalyze.push(ev);
+        }
+    }
 
-        if (llmResult) {
-            // Map LLM entity 'type' to 'entityType' for schema compatibility
-            const mappedEntities = (llmResult.entities || []).map(e => ({
+    // 2. Perform batch LLM analysis if needed
+    if (itemsToAnalyze.length > 0) {
+        const llmResults = await analyzeBatchWithLLM(itemsToAnalyze);
+
+        for (const res of llmResults) {
+            if (!res.id) continue;
+            const current = results.get(res.id);
+            if (!current) continue;
+
+            const mappedEntities = (res.entities || []).map(e => ({
                 entityType: e.type || e.entityType,
                 value: e.value
             }));
 
-            analysis = {
-                priorityScore: llmResult.priorityScore || 0,
-                flags: [...new Set([...patternResult.categories, ...(llmResult.flags || [])])],
-                summary: llmResult.summary || '',
-                sentiment: llmResult.sentiment || 'neutral',
+            results.set(res.id, {
+                priorityScore: res.priorityScore || current.priorityScore,
+                flags: [...new Set([...current.flags, ...(res.flags || [])])],
+                summary: res.summary || current.summary,
+                sentiment: res.sentiment || current.sentiment,
                 entities: mappedEntities,
                 analyzedAt: new Date()
-            };
-        } else if (patternResult.hasPatterns) {
-            // Fallback: boost score if pattern matched but LLM failed
-            analysis.priorityScore = 50;
-            analysis.summary = 'Pattern-based detection (LLM unavailable)';
+            });
         }
-    } else if (patternResult.hasPatterns) {
-        // Pattern only (no LLM)
-        analysis.priorityScore = 40;
-        analysis.summary = `Detected: ${patternResult.categories.join(', ')}`;
     }
 
-    return analysis;
+    return results;
 }
 
 /**
  * Process analysis job for a case
  */
 export async function runAnalysisJob(jobId, options = {}) {
-    const { batchSize = 10, useLLM = true, delayMs = 100 } = options;
+    // Process sequentially to stay within Groq's 30 RPM limit.
+    // 2100ms between LLM calls = ~28 RPM, leaving headroom for other API usage.
+    const { useLLM = true, llmDelayMs = 2100 } = options;
 
     const job = await AnalysisJob.findById(jobId);
     if (!job) throw new Error('Analysis job not found');
@@ -214,26 +236,23 @@ export async function runAnalysisJob(jobId, options = {}) {
         let totalScore = 0;
 
         // Process in batches
+        const batchSize = 10;
         for (let i = 0; i < evidence.length; i += batchSize) {
             const batch = evidence.slice(i, i + batchSize);
+            const batchResults = await analyzeEvidenceBatch(batch, useLLM);
 
-            // Process batch concurrently
-            const analysisPromises = batch.map(ev => analyzeEvidence(ev, useLLM));
-            const results = await Promise.all(analysisPromises);
+            // Update database
+            for (const ev of batch) {
+                const analysis = batchResults.get(ev._id.toString());
+                if (analysis) {
+                    ev.analysis = analysis;
+                    await ev.save();
 
-            // Update evidence records
-            for (let j = 0; j < batch.length; j++) {
-                const ev = batch[j];
-                const analysis = results[j];
-
-                ev.analysis = analysis;
-                await ev.save();
-
-                processedCount++;
-                totalScore += analysis.priorityScore;
-
-                if (analysis.priorityScore >= 60) highPriorityCount++;
-                if (analysis.priorityScore >= 80) criticalCount++;
+                    processedCount++;
+                    totalScore += analysis.priorityScore;
+                    if (analysis.priorityScore >= 60) highPriorityCount++;
+                    if (analysis.priorityScore >= 80) criticalCount++;
+                }
             }
 
             // Update job progress
@@ -243,9 +262,14 @@ export async function runAnalysisJob(jobId, options = {}) {
             job.stats.averageScore = processedCount > 0 ? Math.round(totalScore / processedCount) : 0;
             await job.save();
 
-            // Rate limiting delay
-            if (delayMs > 0 && i + batchSize < evidence.length) {
-                await new Promise(resolve => setTimeout(resolve, delayMs));
+            // Throttle between batches (respecting RPM)
+            const hasLLMContent = batch.some(ev => {
+                const p = quickPatternScan(ev.content);
+                return useLLM && (p.hasPatterns || (ev.content && ev.content.length > 20));
+            });
+
+            if (hasLLMContent && i + batchSize < evidence.length) {
+                await new Promise(r => setTimeout(r, llmDelayMs));
             }
         }
 
