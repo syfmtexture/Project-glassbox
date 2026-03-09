@@ -106,7 +106,13 @@ Respond ONLY with valid JSON in this exact format:
 /**
  * Analyze a single evidence record with Groq
  */
-async function analyzeWithLLM(evidence) {
+/**
+ * Call the Groq LLM with automatic retry on 429 rate-limit errors.
+ * Reads the retry-after time from the error body and waits appropriately.
+ * Max 4 attempts with exponential backoff.
+ */
+async function analyzeWithLLM(evidence, attempt = 1) {
+    const MAX_ATTEMPTS = 4;
     try {
         const prompt = buildAnalysisPrompt(evidence);
 
@@ -116,10 +122,7 @@ async function analyzeWithLLM(evidence) {
                     role: 'system',
                     content: 'You are a forensic analyst AI. Respond only with valid JSON, no markdown or extra text.'
                 },
-                {
-                    role: 'user',
-                    content: prompt
-                }
+                { role: 'user', content: prompt }
             ],
             model: 'llama-3.3-70b-versatile',
             temperature: 0.3,
@@ -130,7 +133,26 @@ async function analyzeWithLLM(evidence) {
         const response = completion.choices[0]?.message?.content;
         return JSON.parse(response);
     } catch (error) {
-        console.error('LLM analysis error:', error.message);
+        const status = error?.status || error?.response?.status;
+
+        if (status === 429 && attempt <= MAX_ATTEMPTS) {
+            // Parse retry-after from error message (e.g. "Please try again in 1.5s")
+            let waitMs = Math.min(2000 * Math.pow(2, attempt - 1), 30000); // default: 2s, 4s, 8s, 16s
+            const match = error.message?.match(/try again in ([\d.]+)s/);
+            if (match) {
+                waitMs = Math.max(Math.ceil(parseFloat(match[1]) * 1000) + 200, waitMs);
+            }
+            console.warn(`Rate limited. Waiting ${waitMs}ms then retrying (attempt ${attempt}/${MAX_ATTEMPTS})...`);
+            await new Promise(r => setTimeout(r, waitMs));
+            return analyzeWithLLM(evidence, attempt + 1);
+        }
+
+        // Non-429 error or max retries exceeded — degrade gracefully
+        if (attempt > MAX_ATTEMPTS) {
+            console.error(`LLM analysis giving up after ${MAX_ATTEMPTS} attempts:`, error.message);
+        } else {
+            console.error('LLM analysis error:', error.message);
+        }
         return null;
     }
 }
@@ -188,7 +210,9 @@ async function analyzeEvidence(evidence, useLLM = true) {
  * Process analysis job for a case
  */
 export async function runAnalysisJob(jobId, options = {}) {
-    const { batchSize = 10, useLLM = true, delayMs = 100 } = options;
+    // Process sequentially to stay within Groq's 30 RPM limit.
+    // 2100ms between LLM calls = ~28 RPM, leaving headroom for other API usage.
+    const { useLLM = true, llmDelayMs = 2100 } = options;
 
     const job = await AnalysisJob.findById(jobId);
     if (!job) throw new Error('Analysis job not found');
@@ -213,39 +237,38 @@ export async function runAnalysisJob(jobId, options = {}) {
         let criticalCount = 0;
         let totalScore = 0;
 
-        // Process in batches
-        for (let i = 0; i < evidence.length; i += batchSize) {
-            const batch = evidence.slice(i, i + batchSize);
+        // Process sequentially — one at a time to respect Groq's RPM limit.
+        // Items that don't need LLM (short content, no patterns) are processed
+        // instantly without waiting; only LLM calls get throttled.
+        for (let i = 0; i < evidence.length; i++) {
+            const ev = evidence[i];
 
-            // Process batch concurrently
-            const analysisPromises = batch.map(ev => analyzeEvidence(ev, useLLM));
-            const results = await Promise.all(analysisPromises);
+            // Quick check: does this item even need an LLM call?
+            const patternCheck = quickPatternScan(ev.content);
+            const needsLLM = useLLM && (patternCheck.hasPatterns || (ev.content && ev.content.length > 20));
 
-            // Update evidence records
-            for (let j = 0; j < batch.length; j++) {
-                const ev = batch[j];
-                const analysis = results[j];
+            const analysis = await analyzeEvidence(ev, useLLM);
 
-                ev.analysis = analysis;
-                await ev.save();
+            ev.analysis = analysis;
+            await ev.save();
 
-                processedCount++;
-                totalScore += analysis.priorityScore;
+            processedCount++;
+            totalScore += analysis.priorityScore;
+            if (analysis.priorityScore >= 60) highPriorityCount++;
+            if (analysis.priorityScore >= 80) criticalCount++;
 
-                if (analysis.priorityScore >= 60) highPriorityCount++;
-                if (analysis.priorityScore >= 80) criticalCount++;
+            // Update job progress every 10 items
+            if (processedCount % 10 === 0 || i === evidence.length - 1) {
+                job.processedRecords = processedCount;
+                job.highPriorityCount = highPriorityCount;
+                job.criticalCount = criticalCount;
+                job.stats.averageScore = processedCount > 0 ? Math.round(totalScore / processedCount) : 0;
+                await job.save();
             }
 
-            // Update job progress
-            job.processedRecords = processedCount;
-            job.highPriorityCount = highPriorityCount;
-            job.criticalCount = criticalCount;
-            job.stats.averageScore = processedCount > 0 ? Math.round(totalScore / processedCount) : 0;
-            await job.save();
-
-            // Rate limiting delay
-            if (delayMs > 0 && i + batchSize < evidence.length) {
-                await new Promise(resolve => setTimeout(resolve, delayMs));
+            // Throttle only when LLM was actually called
+            if (needsLLM && i < evidence.length - 1) {
+                await new Promise(r => setTimeout(r, llmDelayMs));
             }
         }
 
