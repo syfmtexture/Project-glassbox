@@ -1,0 +1,31 @@
+timestamp,sender,receiver,content,type,source
+2024-11-15 08:23:41,+1-555-0134,+1-555-0178,"Hey, are we still on for tonight?",message,WhatsApp
+2024-11-15 08:25:12,+1-555-0178,+1-555-0134,"Yeah bro. Same spot as last time. Bring the stuff.",message,WhatsApp
+2024-11-15 09:00:00,+1-555-0134,+1-555-0291,"Need to pick up 2 ounces from the plug tonight. Can you front me?",message,iMessage
+2024-11-15 09:03:44,+1-555-0291,+1-555-0134,"I got you. Delete this after reading.",message,iMessage
+2024-11-15 09:15:00,+1-555-0134,+1-555-0291,,call,Phone
+2024-11-15 10:30:22,+1-555-0134,+1-555-0455,"Mom, I'll be home late tonight. Don't wait up for dinner.",message,iMessage
+2024-11-15 10:32:00,+1-555-0455,+1-555-0134,"Ok sweetie, be safe. Love you.",message,iMessage
+2024-11-15 11:45:33,+1-555-0134,+1-555-0612,"Transfer $4500 to the offshore account. Use the bitcoin wallet, not the bank.",message,Signal
+2024-11-15 11:47:01,+1-555-0612,+1-555-0134,"Done. Wire confirmed. I'll send you the receipt on the burner phone.",message,Signal
+2024-11-15 12:00:00,+1-555-0134,+1-555-0178,"Lunch at Mario's? I'm starving.",message,WhatsApp
+2024-11-15 12:02:15,+1-555-0178,+1-555-0134,"Sure, meet you there in 20.",message,WhatsApp
+2024-11-15 13:30:00,+1-555-0134,+1-555-0333,"The meeting is set for Friday. Nobody knows about this. Keep it between us.",message,Telegram
+2024-11-15 13:32:44,+1-555-0333,+1-555-0134,"Understood. I'll destroy the evidence and use a VPN from now on.",message,Telegram
+2024-11-15 14:00:00,+1-555-0134,+1-555-0178,,call,Phone
+2024-11-15 14:45:00,+1-555-0134,unknown,"GPS check-in",location,Google Maps
+2024-11-15 15:10:22,+1-555-0134,+1-555-0777,"Can you get me a gun? I need protection. Things are getting dangerous.",message,Signal
+2024-11-15 15:12:00,+1-555-0777,+1-555-0134,"I know a guy. Meet me at the warehouse on 5th. Don't bring your phone.",message,Signal
+2024-11-15 16:00:00,+1-555-0134,+1-555-0455,"Picked up groceries. Got your favorite ice cream 🍦",message,iMessage
+2024-11-15 16:05:33,+1-555-0455,+1-555-0134,"You're the best! See you at home.",message,iMessage
+2024-11-15 17:30:00,+1-555-0134,+1-555-0612,"Payment of $12000 split into 3 cash deposits. Launder through the restaurant.",message,Signal
+2024-11-15 17:32:11,+1-555-0612,+1-555-0134,"Smart. I'll make it look like regular business income. No paper trail.",message,Signal
+2024-11-15 18:00:00,+1-555-0291,+1-555-0134,"Got the stash ready. 2 ounces of coke and some pills. Come through.",message,iMessage
+2024-11-15 18:05:00,+1-555-0134,+1-555-0291,"On my way. Use the encrypted app next time bro.",message,iMessage
+2024-11-15 19:00:00,+1-555-0134,+1-555-0178,"Great game tonight! Lakers killed it 🏀",message,WhatsApp
+2024-11-15 19:02:33,+1-555-0178,+1-555-0134,"LeBron is the GOAT no debate 😂",message,WhatsApp
+2024-11-15 20:00:00,+1-555-0134,+1-555-0333,"Erase all the messages. The feds might be watching. Kill the burner too.",message,Telegram
+2024-11-15 20:03:00,+1-555-0333,+1-555-0134,"Already done. Encrypted backup stored on a hidden drive. We're clean.",message,Telegram
+2024-11-15 21:00:00,+1-555-0134,+1-555-0455,"Goodnight mom. Love you ❤️",message,iMessage
+2024-11-15 21:01:30,+1-555-0455,+1-555-0134,"Goodnight baby. Sweet dreams.",message,iMessage
+2024-11-15 22:00:00,+1-555-0134,+1-555-0612,"Final payment confirmed. $50k total. Scam worked perfectly.",message,Signal
