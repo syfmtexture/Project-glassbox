@@ -4,8 +4,13 @@ import Evidence from '../models/Evidence.js';
 import AnalysisJob from '../models/AnalysisJob.js';
 import { startAnalysis, getJobStatus } from '../services/aiAnalyzer.js';
 import { getCaseStats, getTemporalDistribution, analyzeContactNetwork } from '../services/patternDetector.js';
+import { verifyToken } from '../middleware/auth.js';
+import { logAction, ACTIONS } from '../services/auditLogger.js';
 
 const router = express.Router();
+
+// Apply token verification to all case routes
+router.use(verifyToken);
 
 /**
  * GET /api/cases
@@ -69,6 +74,18 @@ router.post('/', async (req, res, next) => {
             deviceInfo
         });
 
+        // Audit Log
+        if (req.user) {
+            await logAction({
+                userId: req.user.userId,
+                userRole: req.user.role,
+                action: ACTIONS.CREATE_CASE,
+                description: `Created case: ${caseName} (${caseNumber || 'No number'})`,
+                metadata: { caseId: newCase._id, caseName },
+                ipAddress: req.ip
+            });
+        }
+
         res.status(201).json({
             success: true,
             data: newCase
@@ -96,6 +113,18 @@ router.get('/:id', async (req, res, next) => {
             return res.status(404).json({
                 success: false,
                 error: { message: 'Case not found' }
+            });
+        }
+
+        // Optional Audit for viewing sensitive case data
+        if (req.user) {
+            await logAction({
+                userId: req.user.userId,
+                userRole: req.user.role,
+                action: ACTIONS.VIEW_CASE,
+                description: `Viewed case: ${caseDoc.caseName}`,
+                metadata: { caseId: caseDoc._id },
+                ipAddress: req.ip
             });
         }
 
@@ -129,6 +158,18 @@ router.put('/:id', async (req, res, next) => {
             });
         }
 
+        // Audit Log
+        if (req.user) {
+            await logAction({
+                userId: req.user.userId,
+                userRole: req.user.role,
+                action: ACTIONS.UPDATE_CASE,
+                description: `Updated case: ${caseDoc.caseName}`,
+                metadata: { caseId: caseDoc._id, updates: req.body },
+                ipAddress: req.ip
+            });
+        }
+
         res.json({
             success: true,
             data: caseDoc
@@ -153,6 +194,8 @@ router.delete('/:id', async (req, res, next) => {
             });
         }
 
+        const caseName = caseDoc.caseName;
+
         // Delete all associated evidence
         await Evidence.deleteMany({ caseId: req.params.id });
 
@@ -162,10 +205,69 @@ router.delete('/:id', async (req, res, next) => {
         // Delete the case
         await Case.findByIdAndDelete(req.params.id);
 
+        // Audit Log
+        if (req.user) {
+            await logAction({
+                userId: req.user.userId,
+                userRole: req.user.role,
+                action: ACTIONS.DELETE_CASE,
+                description: `Deleted case: ${caseName}`,
+                metadata: { caseId: req.params.id, caseName },
+                ipAddress: req.ip
+            });
+        }
+
         res.json({
             success: true,
             message: 'Case and all associated data deleted'
         });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * GET /api/cases/:id/export
+ * Export evidence as CSV (tracks Chain of Custody)
+ */
+router.get('/:id/export', async (req, res, next) => {
+    try {
+        const caseDoc = await Case.findById(req.params.id);
+        if (!caseDoc) return res.status(404).json({ success: false, error: { message: 'Case not found' } });
+
+        const evidence = await Evidence.find({ caseId: req.params.id }).sort({ timestamp: 1 });
+        
+        // Simple CSV generation
+        const headers = 'Timestamp,Type,Source,Sender,Receiver,Content,Priority\n';
+        const rows = evidence.map(e => {
+            const date = e.timestamp ? new Date(e.timestamp).toISOString() : 'N/A';
+            const content = (e.content || '').replace(/"/g, '""');
+            return `"${date}","${e.type}","${e.source || ''}","${e.sender || ''}","${e.receiver || ''}","${content}","${e.priority || 'medium'}"`;
+        }).join('\n');
+
+        const csvContent = headers + rows;
+        const filename = `${caseDoc.caseName.replace(/\s+/g, '_')}_Evidence_Export.csv`;
+
+        // Audit logic - VERY IMPORTANT for chain of custody
+        if (req.user) {
+            await logAction({
+                userId: req.user.userId,
+                userRole: req.user.role,
+                action: ACTIONS.EXPORT_FILE,
+                description: `Exported evidence CSV for case: ${caseDoc.caseName}`,
+                metadata: { 
+                    caseId: caseDoc._id, 
+                    filename, 
+                    recordCount: evidence.length,
+                    exportType: 'Evidence CSV'
+                },
+                ipAddress: req.ip
+            });
+        }
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.status(200).send(csvContent);
     } catch (error) {
         next(error);
     }
@@ -293,3 +395,4 @@ router.get('/:id/contacts', async (req, res, next) => {
 });
 
 export default router;
+

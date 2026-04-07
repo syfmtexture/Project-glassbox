@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import casesRouter from './cases.js';
 import evidenceRouter from './evidence.js';
 import uploadRouter from './upload.js';
+import authRouter from './auth.js';
+import adminRouter from './admin.js';
 
 const router = express.Router();
 
@@ -44,6 +46,12 @@ router.get('/db-test', (req, res) => {
     }
 });
 
+// ===== Authentication Routes =====
+router.use('/auth', authRouter);
+
+// ===== Admin Routes =====
+router.use('/admin', adminRouter);
+
 // ===== Case Management Routes =====
 router.use('/cases', casesRouter);
 
@@ -54,3 +62,4 @@ router.use('/cases/:caseId/evidence', evidenceRouter);
 router.use('/cases/:caseId/upload', uploadRouter);
 
 export default router;
+

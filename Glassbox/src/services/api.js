@@ -11,16 +11,45 @@ const apiClient = axios.create({
     },
 })
 
+// Request interceptor to add token
+apiClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem('gb_token')
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+})
+
 // Response interceptor for consistent error handling and unwrapping data
 apiClient.interceptors.response.use(
     (response) => response.data,
     (error) => {
         console.error('API Error:', error)
+        if (error.response?.status === 401 && !window.location.pathname.includes('/login')) {
+            localStorage.removeItem('gb_token')
+            localStorage.removeItem('gb_user')
+            window.location.href = '/login'
+        }
         const message =
-            error.response?.data?.error?.message || error.message || 'Something went wrong'
+            error.response?.data?.error?.message || error.response?.data?.error || error.message || 'Something went wrong'
         return Promise.reject(new Error(message))
     }
 )
+
+// ===== AUTH API =====
+export const authApi = {
+    login: (credentials) => apiClient.post('/auth/login', credentials),
+    logout: (userId) => apiClient.post('/auth/logout', { userId }),
+}
+
+// ===== ADMIN API =====
+export const adminApi = {
+    getUsers: () => apiClient.get('/admin/users'),
+    createUser: (data) => apiClient.post('/admin/users', data),
+    toggleUserStatus: (userId) => apiClient.put(`/admin/users/${userId}/toggle-status`),
+    getAuditLogs: (params) => apiClient.get('/admin/audit-logs', { params }),
+    getExportLogs: (params) => apiClient.get('/admin/audit-logs/exports', { params }),
+}
 
 // ===== CASES API =====
 
@@ -35,6 +64,12 @@ export const casesApi = {
     getContacts: (id, params = {}) => apiClient.get(`/cases/${id}/contacts`, { params }),
     analyze: (id, options = {}) => apiClient.post(`/cases/${id}/analyze`, options),
     getAnalysisStatus: (id) => apiClient.get(`/cases/${id}/analysis-status`),
+    exportData: (id) => {
+        // Since we want to trigger a download, we use the raw URL with token
+        const token = localStorage.getItem('gb_token')
+        const url = `${API_BASE}/cases/${id}/export?token=${token}`
+        window.open(url, '_blank')
+    }
 }
 
 // ===== EVIDENCE API =====
@@ -78,8 +113,11 @@ export const healthApi = {
 }
 
 export default {
+    auth: authApi,
+    admin: adminApi,
     cases: casesApi,
     evidence: evidenceApi,
     upload: uploadApi,
     health: healthApi,
 }
+
