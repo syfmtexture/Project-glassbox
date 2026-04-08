@@ -3,17 +3,22 @@ import Evidence from '../models/Evidence.js';
 import AnalysisJob from '../models/AnalysisJob.js';
 import Case from '../models/Case.js';
 
-// Lazy initialize Groq client
+// Groq client — recreated if API key changes or was missing
 let groq = null;
+let groqKeyUsed = null;
 
 function getGroqClient() {
-    if (!groq) {
-        groq = new Groq({
-            apiKey: process.env.GROQ_API_KEY
-        });
+    const key = process.env.GROQ_API_KEY;
+    if (!key) {
+        throw new Error('GROQ_API_KEY is not set in environment variables. Add it to backend/.env');
+    }
+    if (!groq || groqKeyUsed !== key) {
+        groq = new Groq({ apiKey: key });
+        groqKeyUsed = key;
     }
     return groq;
 }
+
 
 
 // Detection categories and keywords for pre-filtering
