@@ -6,11 +6,14 @@ import { ErrorBoundary } from 'react-error-boundary'
 import Header from './components/layout/Header'
 import Dashboard from './pages/Dashboard'
 import { ToastProvider } from './components/ui/Toast'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import Login from './pages/Login'
 
 // Lazy loaded pages for code splitting
 const CaseDetail = lazy(() => import('./pages/CaseDetail'))
 const Timeline = lazy(() => import('./pages/Timeline'))
 const Contacts = lazy(() => import('./pages/Contacts'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 
 const queryClient = new QueryClient()
 
@@ -43,66 +46,102 @@ function LoadingFallback() {
     )
 }
 
+function PrivateRoute({ children }) {
+    const { user } = useAuth();
+    return user ? children : <Navigate to="/login" replace />;
+}
+
+function AdminRoute({ children }) {
+    const { user, isAdmin } = useAuth();
+    if (!user) return <Navigate to="/login" replace />;
+    return isAdmin ? children : <Navigate to="/" replace />;
+}
+
 function AnimatedRoutes() {
     const location = useLocation();
 
     return (
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
+                <Route path="/login" element={<Login />} />
                 <Route
                     path="/"
                     element={
-                        <motion.div
-                            key="home"
-                            initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -20, scale: 0.98 }}
-                            transition={{ duration: 0.3, ease: 'easeOut' }}
-                        >
-                            <Dashboard />
-                        </motion.div>
+                        <PrivateRoute>
+                            <motion.div
+                                key="home"
+                                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -20, scale: 0.98 }}
+                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                            >
+                                <Dashboard />
+                            </motion.div>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/admin"
+                    element={
+                        <AdminRoute>
+                            <motion.div
+                                key="admin"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                            >
+                                <AdminDashboard />
+                            </motion.div>
+                        </AdminRoute>
                     }
                 />
                 <Route
                     path="/case/:id"
                     element={
-                        <motion.div
-                            key="case"
-                            initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -20, scale: 0.98 }}
-                            transition={{ duration: 0.3, ease: 'easeOut' }}
-                        >
-                            <CaseDetail />
-                        </motion.div>
+                        <PrivateRoute>
+                            <motion.div
+                                key="case"
+                                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -20, scale: 0.98 }}
+                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                            >
+                                <CaseDetail />
+                            </motion.div>
+                        </PrivateRoute>
                     }
                 />
                 <Route
                     path="/case/:id/timeline"
                     element={
-                        <motion.div
-                            key="timeline"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.3, ease: 'easeOut' }}
-                        >
-                            <Timeline />
-                        </motion.div>
+                        <PrivateRoute>
+                            <motion.div
+                                key="timeline"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                            >
+                                <Timeline />
+                            </motion.div>
+                        </PrivateRoute>
                     }
                 />
                 <Route
                     path="/case/:id/contacts"
                     element={
-                        <motion.div
-                            key="contacts"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.3, ease: 'easeOut' }}
-                        >
-                            <Contacts />
-                        </motion.div>
+                        <PrivateRoute>
+                            <motion.div
+                                key="contacts"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                            >
+                                <Contacts />
+                            </motion.div>
+                        </PrivateRoute>
                     }
                 />
                 <Route path="*" element={<Navigate to="/" replace />} />
@@ -123,21 +162,24 @@ function App() {
     return (
         <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
             <QueryClientProvider client={queryClient}>
-                <ToastProvider>
-                    <BrowserRouter>
-                        <div className="app">
-                            <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-                            <main className="main-content">
-                                <Suspense fallback={<LoadingFallback />}>
-                                    <AnimatedRoutes />
-                                </Suspense>
-                            </main>
-                        </div>
-                    </BrowserRouter>
-                </ToastProvider>
+                <AuthProvider>
+                    <ToastProvider>
+                        <BrowserRouter>
+                            <div className="app">
+                                <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+                                <main className="main-content">
+                                    <Suspense fallback={<LoadingFallback />}>
+                                        <AnimatedRoutes />
+                                    </Suspense>
+                                </main>
+                            </div>
+                        </BrowserRouter>
+                    </ToastProvider>
+                </AuthProvider>
             </QueryClientProvider>
         </ErrorBoundary>
     )
 }
 
 export default App
+

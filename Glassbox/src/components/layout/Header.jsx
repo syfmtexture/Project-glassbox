@@ -1,11 +1,13 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Menu, Moon, Sun, Search } from 'lucide-react'
+import { Menu, Moon, Sun, Search, LogOut, ShieldAlert } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useAuth } from '../../context/AuthContext'
 
 function Header({ darkMode, setDarkMode }) {
     const [searchOpen, setSearchOpen] = useState(false)
     const [searchValue, setSearchValue] = useState('')
+    const { user, logout, isAdmin } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
 
@@ -103,29 +105,49 @@ function Header({ darkMode, setDarkMode }) {
 
                 {/* Right Actions */}
                 <div className="flex items-center gap-2">
-                    {/* Search (expandable) */}
-                    <div
-                        className={`relative transition-all duration-300 ${searchOpen ? 'w-64' : 'w-10'}`}
-                    >
-                        {searchOpen ? (
-                            <input
-                                type="text"
-                                placeholder="Search cases..."
-                                className="input pr-10"
-                                autoFocus
-                                value={searchValue}
-                                onChange={(e) => setSearchValue(e.target.value)}
-                                onKeyDown={handleSearchSubmit}
-                                onBlur={() => !searchValue && setSearchOpen(false)}
-                            />
-                        ) : null}
-                        <button
-                            onClick={() => setSearchOpen(!searchOpen)}
-                            className={`btn-ghost btn-icon ${searchOpen ? 'absolute right-1 top-1/2 -translate-y-1/2' : ''}`}
-                        >
-                            <Search size={18} />
-                        </button>
-                    </div>
+                    {user && (
+                        <>
+                            {/* Search (expandable) */}
+                            <div
+                                className={`relative transition-all duration-300 ${searchOpen ? 'w-64' : 'w-10'}`}
+                            >
+                                {searchOpen ? (
+                                    <input
+                                        type="text"
+                                        placeholder="Search cases..."
+                                        className="input pr-10"
+                                        autoFocus
+                                        value={searchValue}
+                                        onChange={(e) => setSearchValue(e.target.value)}
+                                        onKeyDown={handleSearchSubmit}
+                                        onBlur={() => !searchValue && setSearchOpen(false)}
+                                    />
+                                ) : null}
+                                <button
+                                    onClick={() => setSearchOpen(!searchOpen)}
+                                    className={`btn-ghost btn-icon ${searchOpen ? 'absolute right-1 top-1/2 -translate-y-1/2' : ''}`}
+                                >
+                                    <Search size={18} />
+                                </button>
+                            </div>
+
+                            {/* Admin Link */}
+                            {isAdmin && (
+                                <Link to="/admin" className="btn-ghost btn-icon" title="Admin Control">
+                                    <ShieldAlert size={18} />
+                                </Link>
+                            )}
+
+                            {/* Logout */}
+                            <button
+                                onClick={logout}
+                                className="btn-ghost btn-icon text-[var(--color-accent-critical)]"
+                                title="Sign Out"
+                            >
+                                <LogOut size={18} />
+                            </button>
+                        </>
+                    )}
 
                     {/* Theme Toggle */}
                     <button
@@ -142,3 +164,4 @@ function Header({ darkMode, setDarkMode }) {
 }
 
 export default Header
+

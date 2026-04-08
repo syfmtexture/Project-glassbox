@@ -410,6 +410,13 @@ function CaseDetail() {
                     {analyzing ? 'Analyzing...' : 'Run Analysis'}
                 </Button>
                 <Button
+                    variant="secondary"
+                    icon={<Download size={16} />}
+                    onClick={() => casesApi.exportData(id)}
+                >
+                    Export Evidence
+                </Button>
+                <Button
                     variant={showSearchBar ? 'secondary' : 'ghost'}
                     icon={<Search size={16} />}
                     onClick={() => {
@@ -433,6 +440,7 @@ function CaseDetail() {
                     </Button>
                 </Link>
             </div>
+
 
             {/* Quick Search Bar */}
             {showSearchBar && (
